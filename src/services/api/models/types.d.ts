@@ -1,0 +1,57 @@
+export interface ModelVariable {
+  name: string
+  type: string
+  equation: string
+  unit: string
+  initial_value?: number | null
+  description: string
+  inflows: string[]
+  outflows: string[]
+}
+
+export interface ModelSchema {
+  file_name: string
+  uploaded_at: string
+  parsed_with: string
+  format: string
+  stocks: ModelVariable[]
+  flows: ModelVariable[]
+  parameters: ModelVariable[]
+  auxiliaries: ModelVariable[]
+}
+
+export interface GetModelResponse {
+  model_id: string
+  model?: ModelSchema | null
+}
+
+export interface UploadModelResponse {
+  model_id: string
+  model?: ModelSchema | null
+}
+
+export interface SimulationConfig {
+  dt?: number
+  total_time?: number
+  parameter_overrides?: Record<string, number>
+}
+
+export interface VariableSummaryStats {
+  mean: number
+  min: number
+  max: number
+  initial: number
+  final: number
+  [key: string]: number
+}
+
+export interface SimulationResult {
+  time_series: Record<string, number[]>
+  summary_stats: Record<string, VariableSummaryStats>
+  steps_executed: number
+  config: SimulationConfig
+}
+
+export interface SimulationResponse {
+  result: SimulationResult
+}
