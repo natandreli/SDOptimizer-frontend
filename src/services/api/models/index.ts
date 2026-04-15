@@ -1,6 +1,8 @@
 import { apiFetcher } from '@/services/api'
 import type {
   GetModelResponse,
+  OptimizationConfig,
+  OptimizationResponse,
   SimulationConfig,
   SimulationResponse,
   UploadModelResponse,
@@ -51,5 +53,19 @@ export async function simulateModel(
   config: SimulationConfig = {}
 ): Promise<SimulationResponse> {
   const res = await apiFetcher.post(`/models/${modelId}/simulate`, config)
+  return res.data
+}
+
+/**
+ * Run Q-learning optimization for a previously uploaded model.
+ * @param modelId The ID of the model to optimize.
+ * @param config Optimization setup values.
+ * @return Optimization output with best parameters, score and history.
+ */
+export async function optimizeModel(
+  modelId: string,
+  config: OptimizationConfig
+): Promise<OptimizationResponse> {
+  const res = await apiFetcher.post(`/models/${modelId}/optimize`, config)
   return res.data
 }

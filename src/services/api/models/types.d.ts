@@ -55,3 +55,31 @@ export interface SimulationResult {
 export interface SimulationResponse {
   result: SimulationResult
 }
+
+export interface OptimizationConfig {
+  parameter_names: string[]
+  initial_values: number[]
+  bounds: Array<[number, number]>
+  rho_factors: number[]
+  epsilon: number
+  max_runs: number
+  target_variable: string
+  statistic: string
+}
+
+export interface OptimizationHistory {
+  rewards: number[]
+  best_rewards: number[]
+  parameters: number[][]
+  actions: number[][]
+}
+
+export interface OptimizationResult {
+  best_parameters: Record<string, number>
+  best_score: number
+  history: OptimizationHistory
+}
+
+export interface OptimizationResponse {
+  result: OptimizationResult | null
+}
