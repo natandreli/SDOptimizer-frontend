@@ -2,6 +2,7 @@ import { QueryClient, QueryClientProvider } from '@tanstack/react-query'
 import { type ReactNode } from 'react'
 import { ToastProvider } from '@/contexts/toast/provider'
 import { ModalProvider } from '@/contexts/modal/provider'
+import { CookieGuardProvider } from '@/contexts/cookie-guard/provider'
 import { BrowserRouter } from 'react-router-dom'
 
 type GlobalProvidersProps = {
@@ -21,11 +22,13 @@ const queryClient = new QueryClient({
 export const GlobalProviders = ({ children }: GlobalProvidersProps) => {
   return (
     <QueryClientProvider client={queryClient}>
-      <BrowserRouter>
-        <ToastProvider>
-          <ModalProvider>{children}</ModalProvider>
-        </ToastProvider>
-      </BrowserRouter>
+      <CookieGuardProvider>
+        <BrowserRouter>
+          <ToastProvider>
+            <ModalProvider>{children}</ModalProvider>
+          </ToastProvider>
+        </BrowserRouter>
+      </CookieGuardProvider>
     </QueryClientProvider>
   )
 }

@@ -5,6 +5,7 @@ import { Button } from '@/components/ui/button'
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card'
 import { Input } from '@/components/ui/input'
 import { Select } from '@/components/ui/select'
+import { useCookieGuard } from '@/hooks/use-cookie-guard'
 
 type ModelOption = {
   value: string
@@ -45,11 +46,15 @@ export const SimulationSetupForm = ({
   onToggleCollapse,
   onSubmit,
 }: SimulationSetupFormProps) => {
+  const { isCookieSupported, status } = useCookieGuard()
+
   const modelPlaceholder = isModelsLoading
     ? 'Loading models...'
     : modelOptions.length === 0
       ? 'No models uploaded yet'
       : 'Select a model...'
+
+  const isCookieBlocked = status !== 'checking' && !isCookieSupported
 
   return (
     <Card>
@@ -146,11 +151,22 @@ export const SimulationSetupForm = ({
                     variant="success"
                     icon={<IconPlayerPlay className="h-4 w-4" />}
                     isLoading={isSubmitting}
-                    disabled={isModelsLoading || modelOptions.length === 0 || !selectedModelId}
+                    disabled={
+                      isCookieBlocked ||
+                      isModelsLoading ||
+                      modelOptions.length === 0 ||
+                      !selectedModelId
+                    }
                   >
                     Run Simulation
                   </Button>
                 </div>
+
+                {isCookieBlocked && (
+                  <p className="text-xs font-medium text-rose-800">
+                    Enable cookies in your browser to run simulations.
+                  </p>
+                )}
               </form>
             </CardContent>
           </motion.div>
