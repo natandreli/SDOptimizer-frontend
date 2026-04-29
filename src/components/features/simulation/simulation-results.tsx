@@ -1,5 +1,5 @@
 import { useMemo, useState } from 'react'
-import { IconChartLine } from '@tabler/icons-react'
+import { IconChartLine, IconX } from '@tabler/icons-react'
 import {
   CartesianGrid,
   Line,
@@ -12,123 +12,115 @@ import {
 import type { SimulationResult } from '@/services/api/models/types'
 import { CardDescription, CardTitle } from '@/components/ui/card'
 import { Select } from '@/components/ui/select'
+import {
+  formatChartValue,
+  formatMetricValue,
+  getVariableColor,
+  renderHighlightedJson,
+} from '@/utils/formatters'
 
 type SimulationResultsProps = {
   result: SimulationResult
 }
 
-const JSON_TOKEN_REGEX =
-  /"(?:\\u[\da-fA-F]{4}|\\[^u]|[^\\"])*"(?=\s*:)|"(?:\\u[\da-fA-F]{4}|\\[^u]|[^\\"])*"|-?\d+(?:\.\d+)?(?:[eE][+-]?\d+)?|\btrue\b|\bfalse\b|\bnull\b/g
-
-const getJsonTokenClass = (token: string, json: string, matchEnd: number): string => {
-  if (token === 'true' || token === 'false') return 'text-emerald-700'
-  if (token === 'null') return 'text-primary-500'
-  if (!Number.isNaN(Number(token))) return 'text-violet-700'
-
-  if (token.startsWith('"')) {
-    let pointer = matchEnd
-    while (pointer < json.length && /\s/.test(json[pointer])) {
-      pointer += 1
-    }
-
-    if (json[pointer] === ':') return 'text-sky-700'
-    return 'text-amber-700'
-  }
-
-  return 'text-primary-900'
-}
-
-const renderHighlightedJson = (json: string) => {
-  const chunks: Array<{ value: string; className: string; key: string }> = []
-  let lastIndex = 0
-  let tokenIndex = 0
-
-  for (const match of json.matchAll(JSON_TOKEN_REGEX)) {
-    if (match.index === undefined) continue
-
-    if (match.index > lastIndex) {
-      chunks.push({
-        value: json.slice(lastIndex, match.index),
-        className: 'text-primary-900',
-        key: `plain-${tokenIndex}`,
-      })
-    }
-
-    const token = match[0]
-    const matchEnd = match.index + token.length
-    chunks.push({
-      value: token,
-      className: getJsonTokenClass(token, json, matchEnd),
-      key: `token-${tokenIndex}`,
-    })
-
-    lastIndex = matchEnd
-    tokenIndex += 1
-  }
-
-  if (lastIndex < json.length) {
-    chunks.push({
-      value: json.slice(lastIndex),
-      className: 'text-primary-900',
-      key: `plain-tail-${tokenIndex}`,
-    })
-  }
-
-  return chunks.map((chunk) => (
-    <span key={chunk.key} className={chunk.className}>
-      {chunk.value}
-    </span>
-  ))
-}
-
-const formatMetricValue = (value: number): string => {
-  if (!Number.isFinite(value)) {
-    return '-'
-  }
-
-  return value.toLocaleString('es-ES', {
-    minimumFractionDigits: 0,
-    maximumFractionDigits: 4,
-  })
-}
-
-const formatChartValue = (value: number): string => {
-  if (!Number.isFinite(value)) {
-    return '-'
-  }
-
-  return value.toLocaleString('es-ES', {
-    minimumFractionDigits: 0,
-    maximumFractionDigits: 4,
-  })
+const VariableChip = ({
+  varName,
+  isFocused,
+  color,
+  onClick,
+  onRemove,
+}: {
+  varName: string
+  isFocused: boolean
+  color: string
+  onClick: () => void
+  onRemove: () => void
+}) => {
+  return (
+    <div
+      onClick={onClick}
+      className={`inline-flex cursor-pointer items-center gap-1.5 rounded-full px-2.5 py-1 text-xs font-medium transition-colors ${
+        isFocused
+          ? 'bg-primary-900 ring-primary-900/20 ring-offset-primary-50 text-white shadow-sm ring-2 ring-offset-2'
+          : 'bg-primary-100 text-primary-900 hover:bg-primary-200'
+      }`}
+    >
+      <div className="h-2 w-2 rounded-full" style={{ backgroundColor: color }} />
+      {varName}
+      <button
+        type="button"
+        onClick={(e) => {
+          e.stopPropagation()
+          onRemove()
+        }}
+        className={`ml-0.5 rounded-full p-0.5 hover:bg-black/10 focus:outline-none ${
+          isFocused ? 'hover:bg-white/20' : ''
+        }`}
+      >
+        <IconX size={12} />
+      </button>
+    </div>
+  )
 }
 
 export const SimulationResults = ({ result }: SimulationResultsProps) => {
-  const [selectedVariable, setSelectedVariable] = useState('')
+  const [prevResult, setPrevResult] = useState(result)
+
+  const [selectedVariables, setSelectedVariables] = useState<string[]>(() => {
+    const keys = Object.keys(result.time_series)
+    return keys.length > 0 ? [keys[0]] : []
+  })
+
+  const [focusedVariable, setFocusedVariable] = useState<string>(() => {
+    const keys = Object.keys(result.time_series)
+    return keys.length > 0 ? keys[0] : ''
+  })
+
+  if (result !== prevResult) {
+    setPrevResult(result)
+    const keys = Object.keys(result.time_series)
+    setSelectedVariables(keys.length > 0 ? [keys[0]] : [])
+    setFocusedVariable(keys.length > 0 ? keys[0] : '')
+  }
 
   const variableNames = useMemo(() => Object.keys(result.time_series), [result])
   const firstSeries = variableNames.length > 0 ? result.time_series[variableNames[0]] : undefined
 
-  const effectiveSelectedVariable =
-    selectedVariable && variableNames.includes(selectedVariable)
-      ? selectedVariable
-      : variableNames[0] || ''
-
   const chartData = useMemo(() => {
-    if (!effectiveSelectedVariable) {
-      return []
+    if (selectedVariables.length === 0) return []
+
+    const base = result.time_series[selectedVariables[0]] || []
+    return base.map((_, index) => {
+      const point: { step: number; [key: string]: number } = { step: index }
+      for (const varName of selectedVariables) {
+        const series = result.time_series[varName] || []
+        point[varName] = series[index]
+      }
+      return point
+    })
+  }, [result, selectedVariables])
+
+  const selectedStats =
+    focusedVariable && result.summary_stats[focusedVariable]
+      ? result.summary_stats[focusedVariable]
+      : undefined
+
+  const handleAddVariable = (val: string) => {
+    if (!selectedVariables.includes(val)) {
+      setSelectedVariables((prev) => [...prev, val])
     }
+    setFocusedVariable(val)
+  }
 
-    const selectedSeries = result.time_series[effectiveSelectedVariable] || []
-    return selectedSeries.map((value, index) => ({
-      step: index,
-      value,
-    }))
-  }, [result, effectiveSelectedVariable])
-
-  const selectedStats = effectiveSelectedVariable
-    ? result.summary_stats[effectiveSelectedVariable]
-    : undefined
+  const handleRemoveVariable = (val: string) => {
+    setSelectedVariables((prev) => {
+      const next = prev.filter((v) => v !== val)
+      if (focusedVariable === val) {
+        setFocusedVariable(next[next.length - 1] || '')
+      }
+      return next
+    })
+  }
 
   const highlightedJson = renderHighlightedJson(JSON.stringify(result, null, 2))
 
@@ -169,53 +161,79 @@ export const SimulationResults = ({ result }: SimulationResultsProps) => {
 
             <div className="space-y-3">
               <Select
-                label="Variable"
-                value={effectiveSelectedVariable}
-                options={variableNames.map((name) => ({ value: name, label: name }))}
-                onChange={setSelectedVariable}
-                disabled={variableNames.length === 0}
-                placeholder="Select a variable..."
+                label="Add variable to compare"
+                value=""
+                options={variableNames
+                  .filter((name) => !selectedVariables.includes(name))
+                  .map((name) => ({ value: name, label: name }))}
+                onChange={handleAddVariable}
+                disabled={variableNames.length === selectedVariables.length}
+                placeholder={
+                  variableNames.length === selectedVariables.length
+                    ? 'All variables selected'
+                    : 'Select a variable...'
+                }
               />
 
-              {selectedStats && (
-                <div className="grid grid-cols-2 gap-2">
-                  <div className="border-primary-200 bg-primary-50/85 rounded-md border px-2.5 py-2">
-                    <p className="text-primary-800/80 text-[11px]">Initial</p>
-                    <p className="text-primary-950 text-sm font-semibold">
-                      {formatMetricValue(selectedStats.initial)}
-                    </p>
-                  </div>
-                  <div className="border-primary-200 bg-primary-50/85 rounded-md border px-2.5 py-2">
-                    <p className="text-primary-800/80 text-[11px]">Final</p>
-                    <p className="text-primary-950 text-sm font-semibold">
-                      {formatMetricValue(selectedStats.final)}
-                    </p>
-                  </div>
-                  <div className="border-primary-200 bg-primary-50/85 rounded-md border px-2.5 py-2">
-                    <p className="text-primary-800/80 text-[11px]">Min</p>
-                    <p className="text-primary-950 text-sm font-semibold">
-                      {formatMetricValue(selectedStats.min)}
-                    </p>
-                  </div>
-                  <div className="border-primary-200 bg-primary-50/85 rounded-md border px-2.5 py-2">
-                    <p className="text-primary-800/80 text-[11px]">Max</p>
-                    <p className="text-primary-950 text-sm font-semibold">
-                      {formatMetricValue(selectedStats.max)}
-                    </p>
-                  </div>
-                  <div className="border-primary-200 bg-primary-50/85 col-span-2 rounded-md border px-2.5 py-2">
-                    <p className="text-primary-800/80 text-[11px]">Mean</p>
-                    <p className="text-primary-950 text-sm font-semibold">
-                      {formatMetricValue(selectedStats.mean)}
-                    </p>
+              {selectedVariables.length > 0 && (
+                <div className="flex flex-wrap gap-2 pt-1">
+                  {selectedVariables.map((varName) => (
+                    <VariableChip
+                      key={varName}
+                      varName={varName}
+                      isFocused={focusedVariable === varName}
+                      color={getVariableColor(variableNames.indexOf(varName))}
+                      onClick={() => setFocusedVariable(varName)}
+                      onRemove={() => handleRemoveVariable(varName)}
+                    />
+                  ))}
+                </div>
+              )}
+
+              {selectedStats && focusedVariable && (
+                <div className="mt-4">
+                  <p className="text-primary-950 mb-2 px-1 text-sm font-medium">
+                    Summary for <span className="font-bold">{focusedVariable}</span>
+                  </p>
+                  <div className="grid grid-cols-2 gap-2">
+                    <div className="border-primary-200 bg-primary-50/85 rounded-md border px-2.5 py-2">
+                      <p className="text-primary-800/80 text-[11px]">Initial</p>
+                      <p className="text-primary-950 text-sm font-semibold">
+                        {formatMetricValue(selectedStats.initial)}
+                      </p>
+                    </div>
+                    <div className="border-primary-200 bg-primary-50/85 rounded-md border px-2.5 py-2">
+                      <p className="text-primary-800/80 text-[11px]">Final</p>
+                      <p className="text-primary-950 text-sm font-semibold">
+                        {formatMetricValue(selectedStats.final)}
+                      </p>
+                    </div>
+                    <div className="border-primary-200 bg-primary-50/85 rounded-md border px-2.5 py-2">
+                      <p className="text-primary-800/80 text-[11px]">Min</p>
+                      <p className="text-primary-950 text-sm font-semibold">
+                        {formatMetricValue(selectedStats.min)}
+                      </p>
+                    </div>
+                    <div className="border-primary-200 bg-primary-50/85 rounded-md border px-2.5 py-2">
+                      <p className="text-primary-800/80 text-[11px]">Max</p>
+                      <p className="text-primary-950 text-sm font-semibold">
+                        {formatMetricValue(selectedStats.max)}
+                      </p>
+                    </div>
+                    <div className="border-primary-200 bg-primary-50/85 col-span-2 rounded-md border px-2.5 py-2">
+                      <p className="text-primary-800/80 text-[11px]">Mean</p>
+                      <p className="text-primary-950 text-sm font-semibold">
+                        {formatMetricValue(selectedStats.mean)}
+                      </p>
+                    </div>
                   </div>
                 </div>
               )}
             </div>
           </section>
 
-          <section className="border-primary-200 bg-primary-50/80 rounded-lg border p-4">
-            <div className="h-[320px]">
+          <section className="border-primary-200 bg-primary-50/80 flex flex-col rounded-lg border p-4">
+            <div className="min-h-[320px] flex-1">
               {chartData.length > 0 ? (
                 <ResponsiveContainer width="100%" height="100%">
                   <LineChart
@@ -245,18 +263,16 @@ export const SimulationResults = ({ result }: SimulationResultsProps) => {
                       axisLine={{ stroke: 'var(--color-primary-300)' }}
                       tickLine={{ stroke: 'var(--color-primary-300)' }}
                       label={{
-                        value: effectiveSelectedVariable || 'Value',
+                        value: 'Values',
                         angle: -90,
                         position: 'insideLeft',
                         fill: 'var(--color-primary-700)',
                         fontSize: 11,
                       }}
+                      width={48}
                     />
                     <Tooltip
-                      formatter={(value: number) => [
-                        formatChartValue(value),
-                        effectiveSelectedVariable,
-                      ]}
+                      formatter={(value: number, name: string) => [formatChartValue(value), name]}
                       labelFormatter={(label: number) => `Step ${label}`}
                       contentStyle={{
                         borderRadius: 8,
@@ -265,20 +281,30 @@ export const SimulationResults = ({ result }: SimulationResultsProps) => {
                         fontSize: 12,
                       }}
                     />
-                    <Line
-                      type="monotone"
-                      dataKey="value"
-                      name={effectiveSelectedVariable || 'value'}
-                      stroke="var(--color-sky-500)"
-                      strokeWidth={2.5}
-                      dot={false}
-                      activeDot={{ r: 4 }}
-                    />
+                    {selectedVariables.map((varName) => {
+                      const globalIdx = variableNames.indexOf(varName)
+                      const color = getVariableColor(globalIdx)
+                      return (
+                        <Line
+                          key={varName}
+                          type="monotone"
+                          dataKey={varName}
+                          name={varName}
+                          stroke={color}
+                          strokeWidth={focusedVariable === varName ? 3 : 2}
+                          strokeOpacity={focusedVariable && focusedVariable !== varName ? 0.4 : 1}
+                          dot={false}
+                          activeDot={{ r: 4, onClick: () => setFocusedVariable(varName) }}
+                          className="cursor-pointer transition-opacity duration-300"
+                          onClick={() => setFocusedVariable(varName)}
+                        />
+                      )
+                    })}
                   </LineChart>
                 </ResponsiveContainer>
               ) : (
                 <div className="text-primary-800/80 flex h-full items-center justify-center text-sm">
-                  Select a variable to visualize its time series.
+                  Select one or more variables to visualize their time series.
                 </div>
               )}
             </div>

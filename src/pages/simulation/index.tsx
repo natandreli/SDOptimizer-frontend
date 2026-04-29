@@ -149,13 +149,13 @@ export const SimulationPage = () => {
   }
 
   return (
-    <div className="space-y-12 pb-12">
-      <div className="space-y-1 text-center">
+    <main className="space-y-8 pb-12">
+      <section className="space-y-1 text-center">
         <p className="text-primary-950 text-3xl font-semibold tracking-tight">Simulation</p>
-        <p className="text-primary-900/75 text-sm">
+        <p className="text-primary-900/75 mt-1 text-sm">
           Run Euler simulation on an uploaded model and inspect the output.
         </p>
-      </div>
+      </section>
 
       <SimulationSetupForm
         isModelsLoading={isModelsLoading}
@@ -181,6 +181,6 @@ export const SimulationPage = () => {
       )}
 
       {!simulationMutation.isPending && result && <SimulationResults result={result} />}
-    </div>
+    </main>
   )
 }

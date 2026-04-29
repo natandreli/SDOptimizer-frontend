@@ -7,6 +7,7 @@ import {
   IconX,
   IconPlayerTrackNext,
   IconBolt,
+  IconFlask2,
 } from '@tabler/icons-react'
 
 export const Header = () => {
@@ -52,6 +53,13 @@ export const Header = () => {
               <IconPlayerTrackNext className="h-5 w-5" />
               Simulation
             </Link>
+            <Link
+              to="/optimize"
+              className="text-primary-900 hover:text-primary-700 flex items-center gap-1.5 text-sm font-medium transition-colors"
+            >
+              <IconFlask2 className="h-5 w-5" />
+              Optimization
+            </Link>
           </nav>
 
           {/* Mobile Menu Button */}
@@ -90,6 +98,14 @@ export const Header = () => {
             >
               <IconPlayerTrackNext className="h-5 w-5" />
               Simulation
+            </Link>
+            <Link
+              to="/optimize"
+              onClick={() => setIsMobileMenuOpen(false)}
+              className="text-primary-900 hover:bg-primary-100 flex items-center gap-2 rounded-lg px-3 py-2 text-sm font-medium transition-colors"
+            >
+              <IconFlask2 className="h-5 w-5" />
+              Optimization
             </Link>
           </nav>
         )}

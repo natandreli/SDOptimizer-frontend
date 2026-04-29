@@ -1,6 +1,12 @@
 import { Link } from 'react-router-dom'
 import { Button } from '@/components/ui/button'
-import { IconUpload, IconDatabase, IconPlayerTrackNext, IconSparkles } from '@tabler/icons-react'
+import {
+  IconUpload,
+  IconDatabase,
+  IconPlayerTrackNext,
+  IconSparkles,
+  IconFlask2,
+} from '@tabler/icons-react'
 
 export const HomePage = () => {
   return (
@@ -31,6 +37,11 @@ export const HomePage = () => {
           <Link to="/simulation" className="inline-flex">
             <Button variant="grey" icon={<IconPlayerTrackNext className="h-4 w-4" />}>
               Open Simulation
+            </Button>
+          </Link>
+          <Link to="/optimize" className="inline-flex">
+            <Button variant="grey" icon={<IconFlask2 className="h-4 w-4" />}>
+              Open Optimization
             </Button>
           </Link>
         </div>

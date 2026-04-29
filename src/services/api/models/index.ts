@@ -2,6 +2,7 @@ import { apiFetcher } from '@/services/api'
 import type {
   GetModelResponse,
   OptimizationConfig,
+  OptimizationOptionsResponse,
   OptimizationResponse,
   SimulationConfig,
   SimulationResponse,
@@ -67,5 +68,17 @@ export async function optimizeModel(
   config: OptimizationConfig
 ): Promise<OptimizationResponse> {
   const res = await apiFetcher.post(`/models/${modelId}/optimize`, config)
+  return res.data
+}
+
+/**
+ * Get model-specific options required to build optimization configuration.
+ * @param modelId The ID of the model.
+ * @return Optimization options (parameters, targets, defaults, directions).
+ */
+export async function getOptimizationOptions(
+  modelId: string
+): Promise<OptimizationOptionsResponse> {
+  const res = await apiFetcher.get(`/models/${modelId}/optimization-options`)
   return res.data
 }

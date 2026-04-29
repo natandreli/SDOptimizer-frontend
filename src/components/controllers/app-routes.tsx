@@ -3,6 +3,7 @@ import { AppLayout } from '@/layout/app-layout'
 import { HomePage } from '@/pages/home'
 import { ModelsPage } from '@/pages/models'
 import { SimulationPage } from '@/pages/simulation'
+import { OptimizePage } from '@/pages/optimize'
 
 export const AppRoutes = () => {
   return (
@@ -11,6 +12,7 @@ export const AppRoutes = () => {
         <Route path="/" element={<HomePage />} />
         <Route path="/models" element={<ModelsPage />} />
         <Route path="/simulation" element={<SimulationPage />} />
+        <Route path="/optimize" element={<OptimizePage />} />
         <Route path="*" element={<Navigate to="/" replace />} />
       </Route>
     </Routes>

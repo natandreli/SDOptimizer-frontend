@@ -64,7 +64,30 @@ export interface OptimizationConfig {
   epsilon: number
   max_runs: number
   target_variable: string
-  statistic: string
+  statistic: 'final' | 'mean' | 'max' | 'min'
+  direction: 'maximize' | 'minimize'
+}
+
+export interface OptimizationParameterOption {
+  name: string
+  initial_value: number
+  suggested_bounds: [number, number]
+  suggested_rho_factor: number
+}
+
+export interface OptimizationDefaults {
+  epsilon: number
+  max_runs: number
+  statistic: 'final' | 'mean' | 'max' | 'min'
+  direction: 'maximize' | 'minimize'
+}
+
+export interface OptimizationOptions {
+  parameters: OptimizationParameterOption[]
+  target_variables: string[]
+  statistics: Array<'final' | 'mean' | 'max' | 'min'>
+  directions: Array<'maximize' | 'minimize'>
+  defaults: OptimizationDefaults
 }
 
 export interface OptimizationHistory {
@@ -82,4 +105,8 @@ export interface OptimizationResult {
 
 export interface OptimizationResponse {
   result: OptimizationResult | null
+}
+
+export interface OptimizationOptionsResponse {
+  options: OptimizationOptions
 }

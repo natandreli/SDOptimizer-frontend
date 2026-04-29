@@ -32,13 +32,13 @@ export const ModelsPage = () => {
   })
 
   return (
-    <div className="space-y-12 pb-12">
-      <div className="space-y-1 text-center">
+    <main className="space-y-8 pb-12">
+      <section className="space-y-1 text-center">
         <p className="text-primary-950 text-3xl font-semibold tracking-tight">Model Management</p>
-        <p className="text-primary-900/75 text-sm">
+        <p className="text-primary-900/75 mt-1 text-sm">
           Upload and manage System Dinamic simulation models
         </p>
-      </div>
+      </section>
 
       <div className="grid grid-cols-1 gap-6 lg:grid-cols-[240px_1fr]">
         <aside className="border-primary-200/90 border-b pb-4 lg:border-r lg:border-b-0 lg:pr-4 lg:pb-0">
@@ -80,6 +80,6 @@ export const ModelsPage = () => {
           {activeTab === 'upload' && <UploadForm onSuccess={() => handleTabChange('list')} />}
         </div>
       </div>
-    </div>
+    </main>
   )
 }
