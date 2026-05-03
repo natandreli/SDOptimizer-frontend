@@ -14,7 +14,7 @@ export const OptimizeRunProgress = ({ progress }: OptimizeRunProgressProps) => {
 
       <div className="bg-primary-100 h-2 overflow-hidden rounded-full">
         <div
-          className="h-full rounded-full bg-emerald-500 transition-all duration-300 ease-out"
+          className="h-full rounded-full bg-sky-500 transition-all duration-300 ease-out"
           style={{ width: `${normalizedProgress}%` }}
         />
       </div>
