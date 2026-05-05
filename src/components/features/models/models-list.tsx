@@ -1,5 +1,5 @@
 import type { GetModelResponse } from '@/services/api/models/types'
-import { IconChartDots3, IconTrash } from '@tabler/icons-react'
+import { IconChartDots3, IconLoader2, IconTrash } from '@tabler/icons-react'
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card'
 import { useModal } from '@/hooks/use-modal'
 import { ModelDetailsModal } from '@/components/features/models/modals/model-details-modal'
@@ -27,11 +27,15 @@ export const ModelsList = ({ models, isLoading }: ModelsListProps) => {
   if (isLoading) {
     return (
       <div className="flex h-full min-h-[400px] flex-col items-center justify-center py-16">
-        <div className="relative">
-          <div className="border-primary-200 h-10 w-10 rounded-full border-4"></div>
-          <div className="absolute top-0 left-0 h-10 w-10 animate-spin rounded-full border-4 border-transparent border-t-sky-500"></div>
+        <div className="bg-primary-100/60 text-primary-400 mb-4 flex h-16 w-16 items-center justify-center rounded-full">
+          <IconLoader2 className="h-8 w-8 animate-spin" />
         </div>
-        <p className="text-primary-900/75 mt-6 text-sm font-medium">Loading models...</p>
+
+        <h3 className="text-primary-950 mb-2 text-xl font-semibold">Loading models...</h3>
+
+        <p className="text-primary-500 max-w-sm text-sm leading-relaxed">
+          Please wait while we load your models.
+        </p>
       </div>
     )
   }
