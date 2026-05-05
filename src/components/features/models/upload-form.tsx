@@ -36,11 +36,11 @@ export const UploadForm = ({ onSuccess }: UploadFormProps) => {
     const extension = hasExtension ? originalFile.name.slice(extensionIndex) : ''
 
     let attempt = 1
-    let candidateName = `${baseName}-copia${extension}`
+    let candidateName = `${baseName}-copy${extension}`
 
     while (existingNames.has(candidateName.toLowerCase())) {
       attempt += 1
-      candidateName = `${baseName}-copia-${attempt}${extension}`
+      candidateName = `${baseName}-copy-${attempt}${extension}`
     }
 
     return new File([originalFile], candidateName, {
@@ -169,13 +169,12 @@ export const UploadForm = ({ onSuccess }: UploadFormProps) => {
           onDragLeave={handleDrag}
           onDragOver={handleDrag}
           onDrop={handleDrop}
-          className={`relative flex min-h-[160px] flex-col items-center justify-center rounded-lg border-2 p-4 text-center transition-all duration-200 ${
-            dragActive
-              ? 'border-primary-400 bg-primary-100/70 shadow-primary-500/15 border-dashed shadow-md'
-              : file
-                ? 'border-primary-300 bg-primary-50/85 border-solid'
-                : 'border-primary-300 bg-primary-50/70 hover:border-primary-400 hover:bg-primary-100/70 hover:shadow-primary-500/10 border-dashed hover:shadow-sm'
-          }`}
+          className={`relative flex min-h-[160px] flex-col items-center justify-center rounded-lg border-2 p-4 text-center transition-all duration-200 ${dragActive
+            ? 'border-primary-400 bg-primary-100/70 shadow-primary-500/15 border-dashed shadow-md'
+            : file
+              ? 'border-primary-300 bg-primary-50/85 border-solid'
+              : 'border-primary-300 bg-primary-50/70 hover:border-primary-400 hover:bg-primary-100/70 hover:shadow-primary-500/10 border-dashed hover:shadow-sm'
+            }`}
         >
           <input
             type="file"
