@@ -158,7 +158,7 @@ export const SimulationPage = () => {
   }[canvasStatus]
 
   return (
-    <div className="flex flex-1 flex-col gap-6">
+    <div className="flex min-h-0 flex-1 flex-col gap-4">
       <section className="space-y-1 text-center">
         <p className="text-primary-950 text-3xl font-semibold tracking-tight">Simulation</p>
         <p className="text-primary-900/75 mt-1 text-sm">
@@ -166,8 +166,8 @@ export const SimulationPage = () => {
         </p>
       </section>
 
-      <div className="grid min-h-[500px] flex-1 grid-cols-1 gap-5 lg:h-[calc(100vh-360px)] lg:grid-cols-[320px_1fr]">
-        <aside className="flex h-full flex-col">
+      <div className="grid min-h-0 flex-1 grid-cols-1 gap-5 lg:grid-cols-[320px_1fr]">
+        <aside className="flex min-h-0 flex-col overflow-hidden">
           <SimulationSetupForm
             isModelsLoading={isModelsLoading}
             modelOptions={modelOptions}

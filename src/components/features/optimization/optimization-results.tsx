@@ -94,18 +94,20 @@ export const OptimizationResults = ({ result }: OptimizationResultsProps) => {
     <section className="space-y-5">
       <div className="grid grid-cols-1 gap-4 lg:grid-cols-3">
         <Card
-          className={`relative overflow-hidden lg:col-span-1 ${unchanged
-            ? 'border-primary-300 bg-primary-50/90'
-            : improved
-              ? 'border-emerald-300 bg-emerald-50/90'
-              : 'border-red-300 bg-red-50/90'
-            }`}
+          className={`relative overflow-hidden lg:col-span-1 ${
+            unchanged
+              ? 'border-primary-300 bg-primary-50/90'
+              : improved
+                ? 'border-emerald-300 bg-emerald-50/90'
+                : 'border-red-300 bg-red-50/90'
+          }`}
         >
           <CardContent>
             <div className="flex flex-col items-center justify-center py-4 text-center">
               <span
-                className={`text-xs font-semibold tracking-widest uppercase ${unchanged ? 'text-primary-600' : improved ? 'text-emerald-700' : 'text-red-700'
-                  }`}
+                className={`text-xs font-semibold tracking-widest uppercase ${
+                  unchanged ? 'text-primary-600' : improved ? 'text-emerald-700' : 'text-red-700'
+                }`}
               >
                 Improvement
               </span>
@@ -119,16 +121,18 @@ export const OptimizationResults = ({ result }: OptimizationResultsProps) => {
                   <IconArrowDown className="h-6 w-6 text-red-600" />
                 )}
                 <span
-                  className={`text-2xl font-extrabold tracking-tight ${unchanged ? 'text-primary-800' : improved ? 'text-emerald-700' : 'text-red-700'
-                    }`}
+                  className={`text-2xl font-extrabold tracking-tight ${
+                    unchanged ? 'text-primary-800' : improved ? 'text-emerald-700' : 'text-red-700'
+                  }`}
                 >
                   {formatNumber(Math.abs(result.improvement_percentage), 2)}%
                 </span>
               </div>
 
               <p
-                className={`mt-2 text-xs ${unchanged ? 'text-primary-600' : improved ? 'text-emerald-600' : 'text-red-600'
-                  }`}
+                className={`mt-2 text-xs ${
+                  unchanged ? 'text-primary-600' : improved ? 'text-emerald-600' : 'text-red-600'
+                }`}
               >
                 {unchanged
                   ? 'No significant change detected'
@@ -271,12 +275,13 @@ export const OptimizationResults = ({ result }: OptimizationResultsProps) => {
                       </td>
                       <td className="px-4 py-3 text-right">
                         <span
-                          className={`inline-flex items-center gap-1 rounded-full px-2 py-0.5 text-xs font-semibold ${isNeutral
-                            ? 'bg-primary-100 text-primary-700'
-                            : isPositive
-                              ? 'bg-emerald-100 text-emerald-800'
-                              : 'bg-red-100 text-red-800'
-                            }`}
+                          className={`inline-flex items-center gap-1 rounded-full px-2 py-0.5 text-xs font-semibold ${
+                            isNeutral
+                              ? 'bg-primary-100 text-primary-700'
+                              : isPositive
+                                ? 'bg-emerald-100 text-emerald-800'
+                                : 'bg-red-100 text-red-800'
+                          }`}
                         >
                           {isPositive && <IconArrowUp className="h-3 w-3" />}
                           {isNegative && <IconArrowDown className="h-3 w-3" />}
@@ -306,7 +311,7 @@ export const OptimizationResults = ({ result }: OptimizationResultsProps) => {
             <ResponsiveContainer width="100%" height="100%">
               <LineChart
                 data={rewardHistoryData}
-                margin={{ top: 10, right: 16, left: 4, bottom: 4 }}
+                margin={{ top: 10, right: 16, left: 4, bottom: 24 }}
                 accessibilityLayer={false}
                 className="[&_.recharts-surface:focus]:outline-none [&_.recharts-wrapper:focus]:outline-none"
               >
@@ -342,7 +347,7 @@ export const OptimizationResults = ({ result }: OptimizationResultsProps) => {
                     fontSize: 12,
                   }}
                 />
-                <Legend wrapperStyle={{ fontSize: 12 }} />
+                <Legend wrapperStyle={{ fontSize: 12, paddingTop: 16 }} />
                 <Line
                   type="monotone"
                   dataKey="reward"
@@ -381,7 +386,7 @@ export const OptimizationResults = ({ result }: OptimizationResultsProps) => {
               <ResponsiveContainer width="100%" height="100%">
                 <LineChart
                   data={parameterEvolutionData}
-                  margin={{ top: 10, right: 16, left: 4, bottom: 4 }}
+                  margin={{ top: 10, right: 16, left: 4, bottom: 24 }}
                   accessibilityLayer={false}
                   className="[&_.recharts-surface:focus]:outline-none [&_.recharts-wrapper:focus]:outline-none"
                 >
@@ -417,7 +422,7 @@ export const OptimizationResults = ({ result }: OptimizationResultsProps) => {
                       fontSize: 12,
                     }}
                   />
-                  <Legend wrapperStyle={{ fontSize: 12 }} />
+                  <Legend wrapperStyle={{ fontSize: 12, paddingTop: 16 }} />
                   {parameterNames.map((name, index) => (
                     <Line
                       key={name}

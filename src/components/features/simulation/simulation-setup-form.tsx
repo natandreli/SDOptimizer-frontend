@@ -64,7 +64,7 @@ export const SimulationSetupForm = ({
           <span className="text-primary-950 text-sm font-semibold">Setup</span>
         </div>
 
-        <div className="space-y-3">
+        <div className="space-y-2">
           <div>
             <p className="text-primary-700 mb-1 text-[10px] font-semibold tracking-widest uppercase">
               Model
@@ -88,7 +88,7 @@ export const SimulationSetupForm = ({
                 transition={{ duration: 0.25, ease: 'easeInOut' }}
                 className="overflow-hidden"
               >
-                <div className="space-y-3 pt-1">
+                <div className="space-y-2 pt-1">
                   <div className="grid grid-cols-2 gap-3">
                     <div>
                       <p className="text-primary-700 mb-1 text-[10px] font-semibold tracking-widest uppercase">

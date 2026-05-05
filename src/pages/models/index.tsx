@@ -15,7 +15,7 @@ export const ModelsPage = () => {
   })
 
   return (
-    <div className="space-y-8">
+    <div className="min-h-0 flex-1 space-y-8 overflow-y-auto">
       <section className="space-y-1 text-center">
         <p className="text-primary-950 text-3xl font-semibold tracking-tight">Model Management</p>
         <p className="text-primary-900/75 mt-1 text-sm">

@@ -115,7 +115,7 @@ export const OptimizationSetupForm = ({
           <span className="text-primary-950 text-sm font-semibold">Setup</span>
         </div>
 
-        <div className="space-y-3">
+        <div className="space-y-2">
           <div>
             <p className="text-primary-700 mb-1 text-[10px] font-semibold tracking-widest uppercase">
               Model
@@ -133,7 +133,7 @@ export const OptimizationSetupForm = ({
             <motion.div
               initial={{ opacity: 0, height: 0 }}
               animate={{ opacity: 1, height: 'auto' }}
-              className="space-y-4 overflow-hidden"
+              className="space-y-2 overflow-hidden"
             >
               <div className="grid grid-cols-2 gap-3">
                 <div className="space-y-1">
@@ -186,6 +186,7 @@ export const OptimizationSetupForm = ({
                     setValue={onMaxRunsChange}
                     required
                     disabled={isSubmitting}
+                    className="font-mono text-sm"
                   />
                 </div>
               </div>
@@ -202,6 +203,7 @@ export const OptimizationSetupForm = ({
                     setValue={onEpsilonChange}
                     required
                     disabled={isSubmitting}
+                    className="font-mono text-sm"
                   />
                 </div>
                 <div className="space-y-1">
@@ -215,6 +217,7 @@ export const OptimizationSetupForm = ({
                     setValue={onGlobalRhoChange}
                     required
                     disabled={isSubmitting}
+                    className="font-mono text-sm"
                   />
                 </div>
               </div>

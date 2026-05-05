@@ -16,7 +16,7 @@ import {
   formatChartValue,
   formatMetricValue,
   getVariableColor,
-  renderHighlightedJson,
+  //renderHighlightedJson,
 } from '@/utils/formatters'
 
 type SimulationResultsProps = {
@@ -39,10 +39,11 @@ const VariableChip = ({
   return (
     <div
       onClick={onClick}
-      className={`inline-flex cursor-pointer items-center gap-1.5 rounded-full px-2.5 py-1 text-xs font-medium transition-colors ${isFocused
-        ? 'bg-primary-900 ring-primary-900/20 ring-offset-primary-50 text-white shadow-sm ring-2 ring-offset-2'
-        : 'bg-primary-100 text-primary-900 hover:bg-primary-200'
-        }`}
+      className={`inline-flex cursor-pointer items-center gap-1.5 rounded-full px-2.5 py-1 text-xs font-medium transition-colors ${
+        isFocused
+          ? 'bg-primary-900 ring-primary-900/20 ring-offset-primary-50 text-white shadow-sm ring-2 ring-offset-2'
+          : 'bg-primary-100 text-primary-900 hover:bg-primary-200'
+      }`}
     >
       <div className="h-2 w-2 rounded-full" style={{ backgroundColor: color }} />
       {varName}
@@ -52,8 +53,9 @@ const VariableChip = ({
           e.stopPropagation()
           onRemove()
         }}
-        className={`ml-0.5 cursor-pointer rounded-full p-0.5 hover:bg-black/10 focus:outline-none ${isFocused ? 'hover:bg-white/20' : ''
-          }`}
+        className={`ml-0.5 cursor-pointer rounded-full p-0.5 hover:bg-black/10 focus:outline-none ${
+          isFocused ? 'hover:bg-white/20' : ''
+        }`}
       >
         <IconX size={12} />
       </button>
@@ -89,7 +91,7 @@ export const SimulationResults = ({ result }: SimulationResultsProps) => {
 
     const base = result.time_series[selectedVariables[0]] || []
     return base.map((_, index) => {
-      const point: { step: number;[key: string]: number } = { step: index }
+      const point: { step: number; [key: string]: number } = { step: index }
       for (const varName of selectedVariables) {
         const series = result.time_series[varName] || []
         point[varName] = series[index]
@@ -120,7 +122,9 @@ export const SimulationResults = ({ result }: SimulationResultsProps) => {
     })
   }
 
-  const highlightedJson = renderHighlightedJson(JSON.stringify(result, null, 2))
+  {
+    /* const highlightedJson = renderHighlightedJson(JSON.stringify(result, null, 2))*/
+  }
 
   return (
     <section className="space-y-4">
@@ -306,14 +310,14 @@ export const SimulationResults = ({ result }: SimulationResultsProps) => {
         </section>
       </div>
 
-      <details className="border-primary-200 bg-primary-50/80 rounded-lg border p-3">
+      {/* <details className="border-primary-200 bg-primary-50/80 rounded-lg border p-3">
         <summary className="text-primary-900/85 cursor-pointer text-sm font-medium">
           Raw JSON (advanced)
         </summary>
         <pre className="border-primary-200 bg-primary-50 mt-3 max-h-[42vh] overflow-auto rounded-md border p-3 text-xs whitespace-pre">
           {highlightedJson}
         </pre>
-      </details>
+      </details> */}
     </section>
   )
 }
