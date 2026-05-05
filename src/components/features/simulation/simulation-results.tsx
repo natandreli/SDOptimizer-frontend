@@ -39,11 +39,10 @@ const VariableChip = ({
   return (
     <div
       onClick={onClick}
-      className={`inline-flex cursor-pointer items-center gap-1.5 rounded-full px-2.5 py-1 text-xs font-medium transition-colors ${
-        isFocused
-          ? 'bg-primary-900 ring-primary-900/20 ring-offset-primary-50 text-white shadow-sm ring-2 ring-offset-2'
-          : 'bg-primary-100 text-primary-900 hover:bg-primary-200'
-      }`}
+      className={`inline-flex cursor-pointer items-center gap-1.5 rounded-full px-2.5 py-1 text-xs font-medium transition-colors ${isFocused
+        ? 'bg-primary-900 ring-primary-900/20 ring-offset-primary-50 text-white shadow-sm ring-2 ring-offset-2'
+        : 'bg-primary-100 text-primary-900 hover:bg-primary-200'
+        }`}
     >
       <div className="h-2 w-2 rounded-full" style={{ backgroundColor: color }} />
       {varName}
@@ -53,9 +52,8 @@ const VariableChip = ({
           e.stopPropagation()
           onRemove()
         }}
-        className={`ml-0.5 rounded-full p-0.5 hover:bg-black/10 focus:outline-none ${
-          isFocused ? 'hover:bg-white/20' : ''
-        }`}
+        className={`ml-0.5 cursor-pointer rounded-full p-0.5 hover:bg-black/10 focus:outline-none ${isFocused ? 'hover:bg-white/20' : ''
+          }`}
       >
         <IconX size={12} />
       </button>
@@ -91,7 +89,7 @@ export const SimulationResults = ({ result }: SimulationResultsProps) => {
 
     const base = result.time_series[selectedVariables[0]] || []
     return base.map((_, index) => {
-      const point: { step: number; [key: string]: number } = { step: index }
+      const point: { step: number;[key: string]: number } = { step: index }
       for (const varName of selectedVariables) {
         const series = result.time_series[varName] || []
         point[varName] = series[index]
@@ -294,8 +292,14 @@ export const SimulationResults = ({ result }: SimulationResultsProps) => {
                           strokeWidth={focusedVariable === varName ? 3 : 2}
                           strokeOpacity={focusedVariable && focusedVariable !== varName ? 0.4 : 1}
                           dot={false}
-                          activeDot={{ r: 4, onClick: () => setFocusedVariable(varName) }}
-                          className="cursor-pointer transition-opacity duration-300"
+                          activeDot={{
+                            r: 4,
+                            onClick: () => setFocusedVariable(varName),
+                            cursor: 'pointer',
+                            style: { outline: 'none' },
+                          }}
+                          className="pointer-events-auto cursor-pointer transition-opacity duration-300"
+                          style={{ cursor: 'pointer', outline: 'none' }}
                           onClick={() => setFocusedVariable(varName)}
                         />
                       )
