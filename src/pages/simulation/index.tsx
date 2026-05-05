@@ -1,7 +1,7 @@
 import { type FormEvent, useEffect, useMemo, useState } from 'react'
 import { useMutation, useQuery } from '@tanstack/react-query'
 import type { AxiosError } from 'axios'
-import { getAllModels, simulateModel } from '@/services/api/models'
+import { getAllModels, getSimulationOptions, simulateModel } from '@/services/api/models'
 import type { SimulationConfig, SimulationResult } from '@/services/api/models/types'
 import { SimulationRunProgress } from '@/components/features/simulation/simulation-run-progress'
 import { SimulationSetupForm } from '@/components/features/simulation/simulation-setup-form'
@@ -12,9 +12,9 @@ import { useToast } from '@/hooks/use-toast'
 export const SimulationPage = () => {
   const toast = useToast()
   const [selectedModelId, setSelectedModelId] = useState('')
-  const [dt, setDt] = useState('0.25')
-  const [totalTime, setTotalTime] = useState('100')
-  const [parameterOverridesText, setParameterOverridesText] = useState('{}')
+  const [dt, setDt] = useState('')
+  const [totalTime, setTotalTime] = useState('')
+  const [parameterOverrides, setParameterOverrides] = useState<Record<string, string>>({})
   const [isSetupCollapsed, setIsSetupCollapsed] = useState(false)
   const [simulationProgress, setSimulationProgress] = useState(0)
   const [result, setResult] = useState<SimulationResult | null>(null)
@@ -23,6 +23,20 @@ export const SimulationPage = () => {
     queryKey: ['models'],
     queryFn: getAllModels,
   })
+
+  const { data: optionsResponse, isLoading } = useQuery({
+    queryKey: ['simulation-options', selectedModelId],
+    queryFn: () => getSimulationOptions(selectedModelId),
+    enabled: Boolean(selectedModelId),
+  })
+
+  const isLoadingOptionsComponent = isLoading
+
+  const simulationOptions = optionsResponse?.options
+
+  const effectiveDt = dt || (simulationOptions ? String(simulationOptions.defaults.dt) : '')
+  const effectiveTotalTime =
+    totalTime || (simulationOptions ? String(simulationOptions.defaults.total_time) : '')
 
   const modelOptions = useMemo(
     () =>
@@ -81,30 +95,6 @@ export const SimulationPage = () => {
     return () => clearTimeout(resetTimer)
   }, [simulationMutation.isPending, simulationProgress])
 
-  const parseParameterOverrides = (raw: string): Record<string, number> => {
-    if (!raw.trim()) {
-      return {}
-    }
-
-    const parsed = JSON.parse(raw)
-
-    if (!parsed || typeof parsed !== 'object' || Array.isArray(parsed)) {
-      throw new Error('Parameter overrides must be a JSON object')
-    }
-
-    const normalized: Record<string, number> = {}
-
-    for (const [key, value] of Object.entries(parsed)) {
-      const numericValue = Number(value)
-      if (!Number.isFinite(numericValue)) {
-        throw new Error(`Override value for "${key}" must be numeric`)
-      }
-      normalized[key] = numericValue
-    }
-
-    return normalized
-  }
-
   const handleRunSimulation = (event: FormEvent<HTMLFormElement>) => {
     event.preventDefault()
 
@@ -113,8 +103,8 @@ export const SimulationPage = () => {
       return
     }
 
-    const dtValue = Number(dt)
-    const totalTimeValue = Number(totalTime)
+    const dtValue = Number(effectiveDt)
+    const totalTimeValue = Number(effectiveTotalTime)
 
     if (!Number.isFinite(dtValue) || dtValue <= 0) {
       toast.error('Time step must be greater than 0')
@@ -126,13 +116,14 @@ export const SimulationPage = () => {
       return
     }
 
-    let parameterOverrides: Record<string, number>
-
-    try {
-      parameterOverrides = parseParameterOverrides(parameterOverridesText)
-    } catch (error) {
-      toast.error(error instanceof Error ? error.message : 'Invalid parameter_overrides JSON')
-      return
+    const overrides: Record<string, number> = {}
+    for (const [name, value] of Object.entries(parameterOverrides)) {
+      if (value.trim() !== '') {
+        const num = Number(value)
+        if (Number.isFinite(num)) {
+          overrides[name] = num
+        }
+      }
     }
 
     setResult(null)
@@ -143,13 +134,13 @@ export const SimulationPage = () => {
       config: {
         dt: dtValue,
         total_time: totalTimeValue,
-        parameter_overrides: parameterOverrides,
+        parameter_overrides: overrides,
       },
     })
   }
 
   return (
-    <main className="space-y-8 pb-12">
+    <div className="space-y-8">
       <section className="space-y-1 text-center">
         <p className="text-primary-950 text-3xl font-semibold tracking-tight">Simulation</p>
         <p className="text-primary-900/75 mt-1 text-sm">
@@ -161,13 +152,22 @@ export const SimulationPage = () => {
         isModelsLoading={isModelsLoading}
         modelOptions={modelOptions}
         selectedModelId={selectedModelId}
-        onSelectedModelIdChange={setSelectedModelId}
-        dt={dt}
+        onSelectedModelIdChange={(value) => {
+          setSelectedModelId(value)
+          setResult(null)
+          setIsSetupCollapsed(false)
+          setDt('')
+          setTotalTime('')
+          setParameterOverrides({})
+        }}
+        dt={effectiveDt}
         onDtChange={setDt}
-        totalTime={totalTime}
+        totalTime={effectiveTotalTime}
         onTotalTimeChange={setTotalTime}
-        parameterOverridesText={parameterOverridesText}
-        onParameterOverridesTextChange={setParameterOverridesText}
+        parameterOverrides={parameterOverrides}
+        onParameterOverridesChange={setParameterOverrides}
+        simulationOptions={simulationOptions}
+        isLoadingOptions={isLoadingOptionsComponent}
         isSubmitting={simulationMutation.isPending}
         isCollapsed={isSetupCollapsed}
         onToggleCollapse={() => setIsSetupCollapsed((prev) => !prev)}
@@ -177,10 +177,13 @@ export const SimulationPage = () => {
       {simulationMutation.isPending && <SimulationRunProgress progress={simulationProgress} />}
 
       {!simulationMutation.isPending && !result && (
-        <SimulationEmptyState isLoading={isModelsLoading} hasModels={modelOptions.length > 0} />
+        <SimulationEmptyState
+          isLoadingModels={isModelsLoading}
+          hasModels={modelOptions.length > 0}
+        />
       )}
 
       {!simulationMutation.isPending && result && <SimulationResults result={result} />}
-    </main>
+    </div>
   )
 }
