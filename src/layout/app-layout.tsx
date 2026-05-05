@@ -6,10 +6,10 @@ import { AnimatedBackground } from '@/components/ui/animated-background'
 
 export const AppLayout = () => {
   return (
-    <div className="relative flex min-h-screen flex-col bg-[var(--color-background)]/80">
+    <div className="relative flex min-h-[100dvh] flex-col bg-[var(--color-background)]/80">
       <AnimatedBackground />
       <Header />
-      <main className="relative z-10 container mx-auto max-w-7xl flex-1 px-5 py-8 lg:px-10">
+      <main className="relative z-10 container mx-auto flex w-full max-w-7xl flex-1 flex-col px-5 py-6 sm:py-8 lg:px-10">
         <Outlet />
       </main>
       <Footer />
