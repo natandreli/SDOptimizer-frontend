@@ -30,6 +30,23 @@ export interface UploadModelResponse {
   model?: ModelSchema | null
 }
 
+export interface SimulationParameterOption {
+  name: string
+  initial_value: number
+}
+
+export interface SimulationOptions {
+  parameters: SimulationParameterOption[]
+  defaults: {
+    dt: number
+    total_time: number
+  }
+}
+
+export interface SimulationOptionsResponse {
+  options: SimulationOptions
+}
+
 export interface SimulationConfig {
   dt?: number
   total_time?: number
@@ -109,4 +126,23 @@ export interface OptimizationResponse {
 
 export interface OptimizationOptionsResponse {
   options: OptimizationOptions
+}
+
+export interface SimulationParameterOption {
+  name: string
+  initial_value: number
+}
+
+export interface SimulationDefaults {
+  dt: number
+  total_time: number
+}
+
+export interface SimulationOptions {
+  parameters: SimulationParameterOption[]
+  defaults: SimulationDefaults
+}
+
+export interface SimulationOptionsResponse {
+  options: SimulationOptions
 }

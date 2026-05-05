@@ -5,6 +5,7 @@ import type {
   OptimizationOptionsResponse,
   OptimizationResponse,
   SimulationConfig,
+  SimulationOptionsResponse,
   SimulationResponse,
   UploadModelResponse,
 } from './types'
@@ -41,6 +42,15 @@ export async function uploadMdlModel(file: File): Promise<UploadModelResponse> {
  */
 export async function deleteModel(modelId: string): Promise<void> {
   await apiFetcher.delete(`/models/${modelId}`)
+}
+
+/**
+ * Get available simulation options including parameters and defaults
+ * @param modelId The ID of the model
+ */
+export async function getSimulationOptions(modelId: string): Promise<SimulationOptionsResponse> {
+  const res = await apiFetcher.get(`/models/${modelId}/simulation-options`)
+  return res.data
 }
 
 /**
