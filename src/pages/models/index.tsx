@@ -1,38 +1,21 @@
-import { useState } from 'react'
 import { useQuery } from '@tanstack/react-query'
-import { useSearchParams } from 'react-router-dom'
 import { getAllModels } from '@/services/api/models'
-import { IconChartDots3, IconUpload } from '@tabler/icons-react'
+import { IconUpload } from '@tabler/icons-react'
 import { ModelsList } from '@/components/features/models/models-list'
 import { UploadForm } from '@/components/features/models/upload-form'
 
-type TabType = 'list' | 'upload'
-
 export const ModelsPage = () => {
-  const [searchParams, setSearchParams] = useSearchParams()
-
-  const getInitialTab = (): TabType => {
-    const tabParam = searchParams.get('tab') as TabType | null
-    if (tabParam && ['list', 'upload'].includes(tabParam)) {
-      return tabParam
-    }
-    return 'list'
-  }
-
-  const [activeTab, setActiveTab] = useState<TabType>(getInitialTab)
-
-  const handleTabChange = (tab: TabType) => {
-    setActiveTab(tab)
-    setSearchParams({ tab })
-  }
-
-  const { data: models, isLoading } = useQuery({
+  const {
+    data: models,
+    isLoading,
+    refetch,
+  } = useQuery({
     queryKey: ['models'],
     queryFn: getAllModels,
   })
 
   return (
-    <main className="space-y-8 pb-12">
+    <div className="space-y-8">
       <section className="space-y-1 text-center">
         <p className="text-primary-950 text-3xl font-semibold tracking-tight">Model Management</p>
         <p className="text-primary-900/75 mt-1 text-sm">
@@ -40,46 +23,39 @@ export const ModelsPage = () => {
         </p>
       </section>
 
-      <div className="grid grid-cols-1 gap-6 lg:grid-cols-[240px_1fr]">
-        <aside className="border-primary-200/90 border-b pb-4 lg:border-r lg:border-b-0 lg:pr-4 lg:pb-0">
-          <nav className="space-y-1" aria-label="Models sections">
-            <button
-              onClick={() => handleTabChange('list')}
-              className={`flex w-full cursor-pointer items-center gap-2 rounded-md px-3 py-2 text-left text-sm font-medium transition-colors ${
-                activeTab === 'list'
-                  ? 'bg-primary-100 text-primary-900'
-                  : 'text-primary-900/70 hover:bg-primary-100/70 hover:text-primary-900'
-              }`}
-            >
-              <IconChartDots3 className="h-4 w-4" />
-              All Models {models ? `(${models.length})` : ''}
-            </button>
-            <button
-              onClick={() => handleTabChange('upload')}
-              className={`flex w-full cursor-pointer items-center gap-2 rounded-md px-3 py-2 text-left text-sm font-medium transition-colors ${
-                activeTab === 'upload'
-                  ? 'bg-primary-100 text-primary-900'
-                  : 'text-primary-900/70 hover:bg-primary-100/70 hover:text-primary-900'
-              }`}
-            >
-              <IconUpload className="h-4 w-4" />
-              Upload MDL File
-            </button>
-          </nav>
-        </aside>
-
-        <div>
-          {activeTab === 'list' && (
-            <ModelsList
-              models={models}
-              isLoading={isLoading}
-              onUploadModel={() => handleTabChange('upload')}
-            />
-          )}
-
-          {activeTab === 'upload' && <UploadForm onSuccess={() => handleTabChange('list')} />}
+      <div className="mx-auto grid max-w-6xl grid-cols-1 gap-6 lg:grid-cols-[1fr_350px]">
+        <div className="order-2 lg:order-1">
+          <div className="h-full p-1 backdrop-blur-sm">
+            <ModelsList models={models} isLoading={isLoading} />
+          </div>
         </div>
+
+        <aside className="order-1 space-y-6 lg:order-2">
+          <div className="border-primary-200 bg-primary-50/50 rounded-xl border p-5 shadow-sm">
+            <div className="mb-4 flex items-center gap-2">
+              <div className="bg-primary-100 text-primary-700 flex h-8 w-8 items-center justify-center rounded-lg">
+                <IconUpload size={18} />
+              </div>
+              <p className="text-primary-950 font-bold">Quick Upload</p>
+            </div>
+            <UploadForm onSuccess={() => refetch()} />
+          </div>
+
+          <div className="border-primary-100 rounded-xl border bg-white/30 p-5 text-sm">
+            <h4 className="text-primary-900 mb-2 font-semibold">Workspace Info</h4>
+            <div className="space-y-3">
+              <div className="border-primary-100 flex justify-between border-b pb-2">
+                <span className="text-primary-800/70">Total Models</span>
+                <span className="text-primary-950 font-bold">{models?.length ?? 0}</span>
+              </div>
+              <p className="text-primary-800/60 leading-relaxed italic">
+                Models must be in Vensim (.mdl) format to be compatible with the reinforcement
+                learning engine.
+              </p>
+            </div>
+          </div>
+        </aside>
       </div>
-    </main>
+    </div>
   )
 }
