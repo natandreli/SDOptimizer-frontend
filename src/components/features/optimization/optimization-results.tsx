@@ -13,7 +13,7 @@ import {
 import type { OptimizationResult } from '@/services/api/models/types'
 import { CardDescription, CardTitle } from '@/components/ui/card'
 
-type OptimizeResultsProps = {
+type OptimizationResultsProps = {
   result: OptimizationResult
 }
 
@@ -28,7 +28,7 @@ const formatNumber = (value: number, maxDecimals: number = 6) => {
   })
 }
 
-export const OptimizeResults = ({ result }: OptimizeResultsProps) => {
+export const OptimizationResults = ({ result }: OptimizationResultsProps) => {
   const historyData = useMemo(
     () =>
       result.history.rewards.map((reward, index) => ({

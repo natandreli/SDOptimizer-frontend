@@ -2,7 +2,7 @@ type OptimizeRunProgressProps = {
   progress: number
 }
 
-export const OptimizeRunProgress = ({ progress }: OptimizeRunProgressProps) => {
+export const OptimizationRunProgress = ({ progress }: OptimizeRunProgressProps) => {
   const normalizedProgress = Math.max(0, Math.min(100, progress))
 
   return (
