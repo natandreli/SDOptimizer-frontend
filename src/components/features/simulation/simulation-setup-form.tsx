@@ -1,10 +1,11 @@
 import type { FormEvent } from 'react'
 import { AnimatePresence, motion } from 'framer-motion'
-import { IconChevronDown, IconPlayerPlay } from '@tabler/icons-react'
+import { IconAdjustments, IconChevronDown, IconPlayerPlay } from '@tabler/icons-react'
 import { Button } from '@/components/ui/button'
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card'
 import { Input } from '@/components/ui/input'
 import { Select } from '@/components/ui/select'
+import type { SimulationOptions } from '@/services/api/models/types'
 
 type ModelOption = {
   value: string
@@ -21,8 +22,10 @@ type SimulationSetupFormProps = {
   onDtChange: (value: string) => void
   totalTime: string
   onTotalTimeChange: (value: string) => void
-  parameterOverridesText: string
-  onParameterOverridesTextChange: (value: string) => void
+  parameterOverrides: Record<string, string>
+  onParameterOverridesChange: (value: Record<string, string>) => void
+  simulationOptions?: SimulationOptions
+  isLoadingOptions?: boolean
   isSubmitting: boolean
   isCollapsed: boolean
   onToggleCollapse: () => void
@@ -38,8 +41,10 @@ export const SimulationSetupForm = ({
   onDtChange,
   totalTime,
   onTotalTimeChange,
-  parameterOverridesText,
-  onParameterOverridesTextChange,
+  parameterOverrides,
+  onParameterOverridesChange,
+  simulationOptions,
+  isLoadingOptions,
   isSubmitting,
   isCollapsed,
   onToggleCollapse,
@@ -57,7 +62,7 @@ export const SimulationSetupForm = ({
         <div className="flex items-start justify-between gap-3">
           <div>
             <CardTitle>Setup</CardTitle>
-            <CardDescription>Choose a model and simulation settings.</CardDescription>
+            <CardDescription>Choose a model and simulate its behavior.</CardDescription>
           </div>
           <button
             type="button"
@@ -85,83 +90,126 @@ export const SimulationSetupForm = ({
               <form onSubmit={onSubmit} className="space-y-4">
                 <Select
                   label="Model to simulate"
-                  placeholder={modelPlaceholder}
                   value={selectedModelId}
-                  options={modelOptions}
                   onChange={onSelectedModelIdChange}
+                  options={modelOptions}
+                  placeholder={modelPlaceholder}
                   disabled={isModelsLoading || modelOptions.length === 0 || isSubmitting}
                 />
 
-                {selectedModelId && (
-                  <motion.div
-                    initial={{ opacity: 0, y: -10 }}
-                    animate={{ opacity: 1, y: 0 }}
-                    className="space-y-4"
-                  >
-                    <div className="grid grid-cols-1 gap-4 md:grid-cols-2">
-                      <div className="space-y-1.5">
-                        <Input
-                          label="Time step"
-                          type="number"
-                          min={0.0001}
-                          step={0.01}
-                          value={dt}
-                          setValue={onDtChange}
-                          required
-                          disabled={isSubmitting}
-                        />
-                        <p className="text-primary-800/75 text-xs">
-                          Smaller values are more precise but take longer to run.
-                        </p>
+                <AnimatePresence initial={false}>
+                  {selectedModelId && simulationOptions && !isLoadingOptions && (
+                    <motion.div
+                      key="options-form"
+                      initial={{ opacity: 0, height: 0 }}
+                      animate={{ opacity: 1, height: 'auto' }}
+                      exit={{ opacity: 0, height: 0 }}
+                      transition={{ duration: 0.3, ease: 'easeInOut' }}
+                    >
+                      <div className="space-y-4 pt-4">
+                        <div className="grid grid-cols-1 gap-4 md:grid-cols-2">
+                          <div className="space-y-1.5">
+                            <Input
+                              label="Time step (dt)"
+                              type="number"
+                              min={0.0001}
+                              step={0.01}
+                              value={dt}
+                              setValue={onDtChange}
+                              required
+                              disabled={isSubmitting}
+                            />
+                            <p className="text-primary-800/75 text-xs">
+                              Resolution of the simulation.
+                            </p>
+                          </div>
+
+                          <div className="space-y-1.5">
+                            <Input
+                              label="Simulation duration"
+                              type="number"
+                              min={0.0001}
+                              step={1}
+                              value={totalTime}
+                              setValue={onTotalTimeChange}
+                              required
+                              disabled={isSubmitting}
+                            />
+                            <p className="text-primary-800/75 text-xs">
+                              Total time simulated (e.g. 100 steps).
+                            </p>
+                          </div>
+                        </div>
+
+                        {simulationOptions.parameters.length > 0 ? (
+                          <section className="space-y-2">
+                            <div className="inline-flex items-center gap-2">
+                              <IconAdjustments className="text-primary-800 h-4 w-4" />
+                              <p className="text-primary-950 text-sm font-semibold">Parameters</p>
+                            </div>
+
+                            <div className="border-primary-200 divide-primary-200 overflow-x-auto rounded-lg border">
+                              <table className="w-full text-left text-sm">
+                                <thead className="bg-primary-100/50">
+                                  <tr>
+                                    <th className="text-primary-700 px-4 py-3 text-xs font-semibold tracking-wider uppercase">
+                                      Parameter Name
+                                    </th>
+                                    <th className="text-primary-700 w-32 px-4 py-3 text-xs font-semibold tracking-wider uppercase md:w-48">
+                                      Value
+                                    </th>
+                                  </tr>
+                                </thead>
+                                <tbody className="divide-primary-200 divide-y">
+                                  {simulationOptions.parameters.map((parameter) => (
+                                    <tr
+                                      key={parameter.name}
+                                      className="hover:bg-primary-50/30 transition-colors"
+                                    >
+                                      <td className="text-primary-900 px-4 py-3 font-mono text-sm tracking-wide">
+                                        {parameter.name}
+                                      </td>
+                                      <td className="px-4 py-3">
+                                        <Input
+                                          type="number"
+                                          className="font-mono text-sm tracking-wide"
+                                          step={0.0001}
+                                          value={
+                                            parameterOverrides[parameter.name] ??
+                                            String(parameter.initial_value)
+                                          }
+                                          setValue={(value) =>
+                                            onParameterOverridesChange({
+                                              ...parameterOverrides,
+                                              [parameter.name]: value,
+                                            })
+                                          }
+                                          disabled={isSubmitting}
+                                        />
+                                      </td>
+                                    </tr>
+                                  ))}
+                                </tbody>
+                              </table>
+                            </div>
+                          </section>
+                        ) : null}
+
+                        <div className="flex items-center justify-end gap-3 pt-6">
+                          <Button
+                            type="submit"
+                            variant="success"
+                            icon={<IconPlayerPlay className="h-4 w-4" />}
+                            isLoading={isSubmitting}
+                            disabled={isModelsLoading || modelOptions.length === 0 || isSubmitting}
+                          >
+                            Run Simulation
+                          </Button>
+                        </div>
                       </div>
-
-                      <div className="space-y-1.5">
-                        <Input
-                          label="Simulation duration"
-                          type="number"
-                          min={0.0001}
-                          step={1}
-                          value={totalTime}
-                          setValue={onTotalTimeChange}
-                          required
-                          disabled={isSubmitting}
-                        />
-                        <p className="text-primary-800/75 text-xs">
-                          Total time horizon to simulate (for example, 100 days/months).
-                        </p>
-                      </div>
-                    </div>
-
-                    <div className="space-y-1.5">
-                      <label className="text-primary-900 block text-sm font-medium">
-                        Optional parameter changes
-                      </label>
-                      <textarea
-                        value={parameterOverridesText}
-                        onChange={(event) => onParameterOverridesTextChange(event.target.value)}
-                        className="border-primary-300 bg-primary-50 text-primary-950 min-h-28 w-full rounded-lg border px-4 py-2.5 text-sm transition-all outline-none focus:border-sky-400/70 focus:ring-2 focus:ring-sky-500/15 disabled:cursor-not-allowed disabled:opacity-50"
-                        placeholder='{"cash revenue": 1500, "hiring rate": 0.2}'
-                        disabled={isSubmitting}
-                      />
-                      <p className="text-primary-800/75 text-xs">
-                        Only include values you want to change for this run. Use JSON with numeric
-                        values.
-                      </p>
-                    </div>
-
-                    <div className="flex items-center justify-end gap-3">
-                      <Button
-                        type="submit"
-                        variant="success"
-                        icon={<IconPlayerPlay className="h-4 w-4" />}
-                        isLoading={isSubmitting}
-                        disabled={isModelsLoading || modelOptions.length === 0 || !selectedModelId}
-                      >
-                        Run Simulation
-                      </Button>
-                    </div>
-                  </motion.div>
-                )}
+                    </motion.div>
+                  )}
+                </AnimatePresence>
               </form>
             </CardContent>
           </motion.div>
