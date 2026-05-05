@@ -31,16 +31,6 @@ export const ModelsPage = () => {
         </div>
 
         <aside className="order-1 space-y-6 lg:order-2">
-          <div className="border-primary-200 bg-primary-50/50 rounded-xl border p-5 shadow-sm">
-            <div className="mb-4 flex items-center gap-2">
-              <div className="bg-primary-100 text-primary-700 flex h-8 w-8 items-center justify-center rounded-lg">
-                <IconUpload size={18} />
-              </div>
-              <p className="text-primary-950 font-bold">Quick Upload</p>
-            </div>
-            <UploadForm onSuccess={() => refetch()} />
-          </div>
-
           <div className="border-primary-100 rounded-xl border bg-white/30 p-5 text-sm">
             <h4 className="text-primary-900 mb-2 font-semibold">Workspace Info</h4>
             <div className="space-y-3">
@@ -53,6 +43,16 @@ export const ModelsPage = () => {
                 learning engine.
               </p>
             </div>
+          </div>
+
+          <div className="border-primary-200 bg-primary-50/50 rounded-xl border p-5 shadow-sm">
+            <div className="mb-4 flex items-center gap-2">
+              <div className="bg-primary-100 text-primary-700 flex h-8 w-8 items-center justify-center rounded-lg">
+                <IconUpload size={18} />
+              </div>
+              <p className="text-primary-950 font-bold">Quick Upload</p>
+            </div>
+            <UploadForm onSuccess={() => refetch()} />
           </div>
         </aside>
       </div>
