@@ -11,10 +11,9 @@ import { useToast } from '@/hooks/use-toast'
 type ModelsListProps = {
   models: GetModelResponse[] | undefined
   isLoading: boolean
-  onUploadModel: () => void
 }
 
-export const ModelsList = ({ models, isLoading, onUploadModel }: ModelsListProps) => {
+export const ModelsList = ({ models, isLoading }: ModelsListProps) => {
   const modal = useModal()
   const toast = useToast()
   const queryClient = useQueryClient()
@@ -78,14 +77,18 @@ export const ModelsList = ({ models, isLoading, onUploadModel }: ModelsListProps
 
   if (!models || models.length === 0) {
     return (
-      <div className="py-12 text-center">
-        <IconChartDots3 className="text-primary-300 mx-auto h-12 w-12" />
-        <p className="text-primary-950 mt-4 text-xl font-semibold">No models yet</p>
-        <p className="text-primary-900/75 mt-2 text-sm">Upload an MDL file to get started</p>
-        <div className="mt-6">
-          <Button size="sm" onClick={onUploadModel}>
-            Upload Model
-          </Button>
+      <div className="flex h-full min-h-[400px] flex-col items-center justify-center p-8 text-center">
+        <div className="bg-primary-100/50 ring-primary-50/50 mb-6 flex h-20 w-20 items-center justify-center rounded-full ring-8">
+          <IconChartDots3 className="text-primary-400 h-10 w-10" />
+        </div>
+        <div className="max-w-xs space-y-2">
+          <p className="text-primary-950 text-xl font-bold tracking-tight">
+            Your workspace is empty
+          </p>
+          <p className="text-primary-900/60 text-sm leading-relaxed">
+            There are no models available in your repository yet. Use the upload panel to the right
+            to add your first Vensim (.mdl) model.
+          </p>
         </div>
       </div>
     )
