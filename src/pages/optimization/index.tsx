@@ -1,3 +1,4 @@
+import { IconChartLine } from '@tabler/icons-react'
 import type { FormEvent } from 'react'
 import { useEffect, useMemo, useState } from 'react'
 import { useMutation, useQuery } from '@tanstack/react-query'
@@ -5,7 +6,6 @@ import type { AxiosError } from 'axios'
 import { OptimizationSetupForm } from '@/components/features/optimization/optimization-setup-form'
 import { OptimizationEmptyState } from '@/components/features/optimization/optimization-empty-state'
 import { OptimizationResults } from '@/components/features/optimization/optimization-results'
-import { OptimizationRunProgress } from '@/components/features/optimization/optimization-run-progress'
 import { getAllModels, getOptimizationOptions, optimizeModel } from '@/services/api/models'
 import type {
   OptimizationConfig,
@@ -35,7 +35,6 @@ export const OptimizationPage = () => {
   const [boundMins, setBoundMins] = useState<NumericFieldState>({})
   const [boundMaxs, setBoundMaxs] = useState<NumericFieldState>({})
   const [globalRho, setGlobalRho] = useState('')
-  const [isSetupCollapsed, setIsSetupCollapsed] = useState(false)
   const [result, setResult] = useState<OptimizationResult | null>(null)
   const [progress, setProgress] = useState(0)
 
@@ -50,7 +49,7 @@ export const OptimizationPage = () => {
     enabled: Boolean(selectedModelId),
   })
 
-  const optimizationOptions = optimizationOptionsResponse?.options
+  const optimizationOptions = optimizationOptionsResponse?.options ?? null
 
   const effectiveStatistic = selectedStatistic || optimizationOptions?.defaults.statistic || ''
   const effectiveTargetVariable =
@@ -73,7 +72,6 @@ export const OptimizationPage = () => {
     onSuccess: (data) => {
       setProgress(100)
       setResult(data.result)
-      setIsSetupCollapsed(true)
       toast.success('Optimization completed successfully')
     },
     onError: (error: AxiosError<{ detail?: string }>) => {
@@ -256,7 +254,7 @@ export const OptimizationPage = () => {
     Boolean(effectiveMaxRuns)
 
   return (
-    <div className="space-y-8">
+    <div className="flex flex-1 flex-col gap-6">
       <section className="space-y-1 text-center">
         <p className="text-primary-950 text-3xl font-semibold tracking-tight">Optimization</p>
         <p className="text-primary-900/75 mt-1 text-sm">
@@ -264,64 +262,98 @@ export const OptimizationPage = () => {
         </p>
       </section>
 
-      <OptimizationSetupForm
-        isModelsLoading={isLoadingModels}
-        modelOptions={modelOptions}
-        selectedModelId={selectedModelId}
-        onSelectedModelIdChange={(value) => {
-          setSelectedModelId(value)
-          setResult(null)
-          setIsSetupCollapsed(false)
-          setSelectedStatistic('')
-          setSelectedTargetVariable('')
-          setSelectedDirection('')
-          setEpsilon('')
-          setMaxRuns('')
-          setInitialValues({})
-          setBoundMins({})
-          setBoundMaxs({})
-          setGlobalRho('')
-        }}
-        optimizationOptions={optimizationOptions}
-        isLoadingOptions={isLoadingOptions}
-        isSubmitting={optimizeMutation.isPending}
-        isCollapsed={isSetupCollapsed}
-        onToggleCollapse={() => setIsSetupCollapsed((prev) => !prev)}
-        onSubmit={handleRunOptimization}
-        effectiveStatistic={effectiveStatistic}
-        onStatisticChange={setSelectedStatistic}
-        statisticOptions={statisticOptions}
-        effectiveTargetVariable={effectiveTargetVariable}
-        onTargetVariableChange={setSelectedTargetVariable}
-        targetVariableOptions={targetVariableOptions}
-        effectiveDirection={effectiveDirection}
-        onDirectionChange={setSelectedDirection}
-        directionOptions={DIRECTION_OPTIONS}
-        effectiveEpsilon={effectiveEpsilon}
-        onEpsilonChange={setEpsilon}
-        effectiveMaxRuns={effectiveMaxRuns}
-        onMaxRunsChange={setMaxRuns}
-        effectiveGlobalRho={effectiveGlobalRho}
-        onGlobalRhoChange={setGlobalRho}
-        initialValues={initialValues}
-        onInitialValuesChange={setInitialValues}
-        boundMins={boundMins}
-        onBoundMinsChange={setBoundMins}
-        boundMaxs={boundMaxs}
-        onBoundMaxsChange={setBoundMaxs}
-        isConfigReady={isConfigReady}
-      />
+      <div className="grid min-h-[500px] flex-1 grid-cols-1 gap-5 lg:h-[calc(100vh-360px)] lg:grid-cols-[320px_1fr]">
+        <aside className="flex h-full min-h-0 flex-col">
+          <OptimizationSetupForm
+            isModelsLoading={isLoadingModels}
+            modelOptions={modelOptions}
+            selectedModelId={selectedModelId}
+            onSelectedModelIdChange={(value) => {
+              setSelectedModelId(value)
+              setResult(null)
+              setSelectedStatistic('')
+              setSelectedTargetVariable('')
+              setSelectedDirection('')
+              setEpsilon('')
+              setMaxRuns('')
+              setInitialValues({})
+              setBoundMins({})
+              setBoundMaxs({})
+              setGlobalRho('')
+            }}
+            optimizationOptions={optimizationOptions}
+            isLoadingOptions={isLoadingOptions}
+            isSubmitting={optimizeMutation.isPending}
+            onSubmit={handleRunOptimization}
+            effectiveStatistic={effectiveStatistic}
+            onStatisticChange={setSelectedStatistic}
+            statisticOptions={statisticOptions}
+            effectiveTargetVariable={effectiveTargetVariable}
+            onTargetVariableChange={setSelectedTargetVariable}
+            targetVariableOptions={targetVariableOptions}
+            effectiveDirection={effectiveDirection}
+            onDirectionChange={setSelectedDirection}
+            directionOptions={DIRECTION_OPTIONS}
+            effectiveEpsilon={effectiveEpsilon}
+            onEpsilonChange={setEpsilon}
+            effectiveMaxRuns={effectiveMaxRuns}
+            onMaxRunsChange={setMaxRuns}
+            effectiveGlobalRho={effectiveGlobalRho}
+            onGlobalRhoChange={setGlobalRho}
+            initialValues={initialValues}
+            onInitialValuesChange={setInitialValues}
+            boundMins={boundMins}
+            onBoundMinsChange={setBoundMins}
+            boundMaxs={boundMaxs}
+            onBoundMaxsChange={setBoundMaxs}
+            isConfigReady={isConfigReady}
+          />
+        </aside>
 
-      {optimizeMutation.isPending ? <OptimizationRunProgress progress={progress} /> : null}
+        <section className="border-primary-200/90 bg-primary-50/95 flex h-full min-h-0 flex-col rounded-xl border shadow-sm">
+          <div className="border-primary-200/70 flex items-center justify-between border-b px-5 py-3">
+            <div className="flex items-center gap-2">
+              <IconChartLine className="text-primary-700 h-4 w-4" />
+              <span className="text-primary-950 text-base font-semibold">Results</span>
+            </div>
+            {optimizeMutation.isPending ? (
+              <span className="inline-flex items-center gap-1.5 rounded-full border border-sky-200 bg-sky-50 px-2.5 py-1 text-xs font-medium text-sky-700">
+                <span className="h-1.5 w-1.5 animate-pulse rounded-full bg-sky-500" />
+                Optimizing...
+              </span>
+            ) : result ? (
+              <span className="inline-flex items-center gap-1.5 rounded-full border border-emerald-200 bg-emerald-50 px-2.5 py-1 text-xs font-medium text-emerald-700">
+                <span className="h-1.5 w-1.5 rounded-full bg-emerald-500" />
+                Completed
+              </span>
+            ) : (
+              <span className="inline-flex items-center gap-1.5 rounded-full border border-amber-200 bg-amber-50 px-2.5 py-1 text-xs font-medium text-amber-700">
+                <span className="h-1.5 w-1.5 rounded-full bg-amber-400" />
+                Awaiting Input
+              </span>
+            )}
+          </div>
 
-      {!optimizeMutation.isPending && !result && (
-        <OptimizationEmptyState
-          isLoadingModels={isLoadingModels}
-          hasModels={(models?.length ?? 0) > 0}
-        />
-      )}
+          {optimizeMutation.isPending && (
+            <div className="bg-primary-100 h-1.5 w-full overflow-hidden">
+              <div
+                className="h-full rounded-r-full bg-sky-500 transition-all duration-300 ease-out"
+                style={{ width: `${Math.max(0, Math.min(100, progress))}%` }}
+              />
+            </div>
+          )}
 
-      {!optimizeMutation.isPending && result && <OptimizationResults result={result} />}
+          <div className="flex flex-1 flex-col overflow-y-auto p-5">
+            {!optimizeMutation.isPending && !result && (
+              <OptimizationEmptyState
+                isLoadingModels={isLoadingModels}
+                hasModels={(models?.length ?? 0) > 0}
+              />
+            )}
+            {!optimizeMutation.isPending && result && <OptimizationResults result={result} />}
+          </div>
+        </section>
+      </div>
     </div>
   )
 }

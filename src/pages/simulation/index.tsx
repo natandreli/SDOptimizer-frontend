@@ -1,9 +1,9 @@
 import { type FormEvent, useEffect, useMemo, useState } from 'react'
 import { useMutation, useQuery } from '@tanstack/react-query'
 import type { AxiosError } from 'axios'
+import { IconChartLine } from '@tabler/icons-react'
 import { getAllModels, getSimulationOptions, simulateModel } from '@/services/api/models'
 import type { SimulationConfig, SimulationResult } from '@/services/api/models/types'
-import { SimulationRunProgress } from '@/components/features/simulation/simulation-run-progress'
 import { SimulationSetupForm } from '@/components/features/simulation/simulation-setup-form'
 import { SimulationEmptyState } from '@/components/features/simulation/simulation-empty-state'
 import { SimulationResults } from '@/components/features/simulation/simulation-results'
@@ -15,7 +15,6 @@ export const SimulationPage = () => {
   const [dt, setDt] = useState('')
   const [totalTime, setTotalTime] = useState('')
   const [parameterOverrides, setParameterOverrides] = useState<Record<string, string>>({})
-  const [isSetupCollapsed, setIsSetupCollapsed] = useState(false)
   const [simulationProgress, setSimulationProgress] = useState(0)
   const [result, setResult] = useState<SimulationResult | null>(null)
 
@@ -54,7 +53,6 @@ export const SimulationPage = () => {
     onSuccess: (data) => {
       setResult(data.result)
       setSimulationProgress(100)
-      setIsSetupCollapsed(true)
       toast.success('Simulation completed successfully')
     },
     onError: (error: AxiosError<{ detail?: string }>) => {
@@ -139,8 +137,28 @@ export const SimulationPage = () => {
     })
   }
 
+  const canvasStatus = simulationMutation.isPending ? 'running' : result ? 'complete' : 'awaiting'
+
+  const statusConfig = {
+    awaiting: {
+      label: 'Awaiting Input',
+      dotClass: 'bg-amber-400',
+      badgeClass: 'border-amber-200 bg-amber-50 text-amber-700',
+    },
+    running: {
+      label: 'Running...',
+      dotClass: 'bg-sky-500 animate-pulse',
+      badgeClass: 'border-sky-200 bg-sky-50 text-sky-700',
+    },
+    complete: {
+      label: 'Complete',
+      dotClass: 'bg-emerald-500',
+      badgeClass: 'border-emerald-200 bg-emerald-50 text-emerald-700',
+    },
+  }[canvasStatus]
+
   return (
-    <div className="space-y-8">
+    <div className="flex flex-1 flex-col gap-6">
       <section className="space-y-1 text-center">
         <p className="text-primary-950 text-3xl font-semibold tracking-tight">Simulation</p>
         <p className="text-primary-900/75 mt-1 text-sm">
@@ -148,42 +166,67 @@ export const SimulationPage = () => {
         </p>
       </section>
 
-      <SimulationSetupForm
-        isModelsLoading={isModelsLoading}
-        modelOptions={modelOptions}
-        selectedModelId={selectedModelId}
-        onSelectedModelIdChange={(value) => {
-          setSelectedModelId(value)
-          setResult(null)
-          setIsSetupCollapsed(false)
-          setDt('')
-          setTotalTime('')
-          setParameterOverrides({})
-        }}
-        dt={effectiveDt}
-        onDtChange={setDt}
-        totalTime={effectiveTotalTime}
-        onTotalTimeChange={setTotalTime}
-        parameterOverrides={parameterOverrides}
-        onParameterOverridesChange={setParameterOverrides}
-        simulationOptions={simulationOptions}
-        isLoadingOptions={isLoadingOptionsComponent}
-        isSubmitting={simulationMutation.isPending}
-        isCollapsed={isSetupCollapsed}
-        onToggleCollapse={() => setIsSetupCollapsed((prev) => !prev)}
-        onSubmit={handleRunSimulation}
-      />
+      <div className="grid min-h-[500px] flex-1 grid-cols-1 gap-5 lg:h-[calc(100vh-360px)] lg:grid-cols-[320px_1fr]">
+        <aside className="flex h-full flex-col">
+          <SimulationSetupForm
+            isModelsLoading={isModelsLoading}
+            modelOptions={modelOptions}
+            selectedModelId={selectedModelId}
+            onSelectedModelIdChange={(value) => {
+              setSelectedModelId(value)
+              setResult(null)
+              setDt('')
+              setTotalTime('')
+              setParameterOverrides({})
+            }}
+            dt={effectiveDt}
+            onDtChange={setDt}
+            totalTime={effectiveTotalTime}
+            onTotalTimeChange={setTotalTime}
+            parameterOverrides={parameterOverrides}
+            onParameterOverridesChange={setParameterOverrides}
+            simulationOptions={simulationOptions}
+            isLoadingOptions={isLoadingOptionsComponent}
+            isSubmitting={simulationMutation.isPending}
+            onSubmit={handleRunSimulation}
+          />
+        </aside>
 
-      {simulationMutation.isPending && <SimulationRunProgress progress={simulationProgress} />}
+        <section className="border-primary-200/90 bg-primary-50/95 flex h-full min-h-0 flex-col rounded-xl border shadow-sm">
+          <div className="border-primary-200/70 flex items-center justify-between border-b px-5 py-3">
+            <div className="flex items-center gap-2">
+              <IconChartLine className="text-primary-700 h-4 w-4" />
+              <span className="text-primary-950 text-base font-semibold">Results</span>
+            </div>
+            <span
+              className={`inline-flex items-center gap-1.5 rounded-full border px-2.5 py-1 text-xs font-medium ${statusConfig.badgeClass}`}
+            >
+              <span className={`h-1.5 w-1.5 rounded-full ${statusConfig.dotClass}`} />
+              {statusConfig.label}
+            </span>
+          </div>
 
-      {!simulationMutation.isPending && !result && (
-        <SimulationEmptyState
-          isLoadingModels={isModelsLoading}
-          hasModels={modelOptions.length > 0}
-        />
-      )}
+          {simulationMutation.isPending && (
+            <div className="bg-primary-100 h-1.5 w-full overflow-hidden">
+              <div
+                className="h-full rounded-r-full bg-sky-500 transition-all duration-300 ease-out"
+                style={{ width: `${Math.max(0, Math.min(100, simulationProgress))}%` }}
+              />
+            </div>
+          )}
 
-      {!simulationMutation.isPending && result && <SimulationResults result={result} />}
+          <div className="flex flex-1 flex-col overflow-y-auto p-5">
+            {!simulationMutation.isPending && !result && (
+              <SimulationEmptyState
+                isLoadingModels={isModelsLoading}
+                hasModels={modelOptions.length > 0}
+              />
+            )}
+
+            {!simulationMutation.isPending && result && <SimulationResults result={result} />}
+          </div>
+        </section>
+      </div>
     </div>
   )
 }
