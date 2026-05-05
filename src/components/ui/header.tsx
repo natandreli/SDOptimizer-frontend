@@ -54,7 +54,7 @@ export const Header = () => {
               Simulation
             </Link>
             <Link
-              to="/optimize"
+              to="/optimization"
               className="text-primary-900 hover:text-primary-700 flex items-center gap-1.5 text-sm font-medium transition-colors"
             >
               <IconFlask2 className="h-5 w-5" />
@@ -100,7 +100,7 @@ export const Header = () => {
               Simulation
             </Link>
             <Link
-              to="/optimize"
+              to="/optimization"
               onClick={() => setIsMobileMenuOpen(false)}
               className="text-primary-900 hover:bg-primary-100 flex items-center gap-2 rounded-lg px-3 py-2 text-sm font-medium transition-colors"
             >
