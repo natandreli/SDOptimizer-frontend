@@ -114,10 +114,29 @@ export interface OptimizationHistory {
   actions: number[][]
 }
 
+export interface ParameterChange {
+  initial_value: number
+  optimized_value: number
+  change_percentage: number
+}
+
+export interface OptimizationConfigSummary {
+  target_variable: string
+  statistic: string
+  direction: string
+  max_runs: number
+  epsilon: number
+}
+
 export interface OptimizationResult {
   best_parameters: Record<string, number>
   best_score: number
   history: OptimizationHistory
+  initial_parameters: Record<string, number>
+  initial_score: number
+  improvement_percentage: number
+  parameter_changes: Record<string, ParameterChange>
+  config_summary: OptimizationConfigSummary
 }
 
 export interface OptimizationResponse {
