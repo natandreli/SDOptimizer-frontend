@@ -162,20 +162,14 @@ export const UploadForm = ({ onSuccess }: UploadFormProps) => {
   }
 
   return (
-    <div className="mx-auto max-w-4xl">
-      <div className="mb-6">
-        <p className="text-primary-900/75 mt-1 text-sm">
-          Upload a System Dinamic simulation model in MDL format to add it to your model library.
-        </p>
-      </div>
-
-      <form onSubmit={handleSubmit} className="space-y-6">
+    <div className="mx-auto w-full max-w-4xl">
+      <form onSubmit={handleSubmit} className="space-y-4">
         <div
           onDragEnter={handleDrag}
           onDragLeave={handleDrag}
           onDragOver={handleDrag}
           onDrop={handleDrop}
-          className={`relative rounded-lg border-2 p-12 text-center transition-all duration-200 ${
+          className={`relative flex min-h-[160px] flex-col items-center justify-center rounded-lg border-2 p-4 text-center transition-all duration-200 ${
             dragActive
               ? 'border-primary-400 bg-primary-100/70 shadow-primary-500/15 border-dashed shadow-md'
               : file
@@ -189,14 +183,6 @@ export const UploadForm = ({ onSuccess }: UploadFormProps) => {
             accept=".mdl"
             className="absolute inset-0 cursor-pointer opacity-0"
           />
-          {file ? (
-            <IconFileText className="text-primary-700 mx-auto h-12 w-12" />
-          ) : (
-            <IconUpload className="text-primary-500 mx-auto h-12 w-12" />
-          )}
-          <p className="text-primary-950 mt-4 text-sm font-medium">
-            {file ? file.name : 'Drop your file here, or click to browse'}
-          </p>
           {file && (
             <button
               type="button"
@@ -204,17 +190,29 @@ export const UploadForm = ({ onSuccess }: UploadFormProps) => {
                 e.preventDefault()
                 setFile(null)
               }}
-              className="text-primary-700/80 absolute top-2 right-2 flex flex-shrink-0 rounded-lg p-1 transition-all hover:scale-110 hover:text-rose-600"
+              className="text-primary-700/80 absolute top-2 right-2 z-10 flex rounded-lg p-1 transition-all hover:scale-110 hover:text-rose-600"
               aria-label="Clear file"
             >
-              <IconX className="h-5 w-5 cursor-pointer" />
+              <IconX className="h-4 w-4" />
             </button>
           )}
-          <p className="text-primary-800/75 mt-2 min-h-4 text-xs">
-            {file ? `${formatFileSize(file.size)}` : 'Supports .mdl files'}
-          </p>
+          <div className="flex flex-col items-center justify-center space-y-2">
+            {file ? (
+              <IconFileText className="text-primary-600 h-10 w-10" />
+            ) : (
+              <IconUpload className="text-primary-400 h-10 w-10" />
+            )}
+            <div className="max-w-[200px]">
+              <p className="text-primary-950 truncate text-xs font-semibold">
+                {file ? file.name : 'Drop file or click to browse'}
+              </p>
+              <p className="text-primary-800/60 mt-0.5 text-[10px]">
+                {file ? formatFileSize(file.size) : 'Supports .mdl files'}
+              </p>
+            </div>
+          </div>
         </div>
-        <div className="mt-10 flex justify-end">
+        <div className="flex justify-end">
           <Button
             type="submit"
             variant="success"
