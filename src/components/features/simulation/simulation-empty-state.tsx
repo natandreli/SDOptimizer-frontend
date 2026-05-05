@@ -7,18 +7,18 @@ type SimulationEmptyStateProps = {
 
 export const SimulationEmptyState = ({ isLoadingModels, hasModels }: SimulationEmptyStateProps) => {
   return (
-    <div className="border-primary-100 flex min-h-[400px] flex-col items-center justify-center rounded-xl border bg-white/50 p-8 text-center backdrop-blur-sm">
-      <div className="bg-primary-50 text-primary-500 mb-4 flex h-16 w-16 items-center justify-center rounded-2xl">
+    <div className="flex flex-1 flex-col items-center justify-center p-8 text-center">
+      <div className="bg-primary-100/60 text-primary-400 mb-4 flex h-16 w-16 items-center justify-center rounded-full">
         {isLoadingModels ? (
           <IconLoader2 className="h-8 w-8 animate-spin" />
         ) : !hasModels ? (
-          <IconSettings className="h-8 w-8 opacity-50" />
+          <IconSettings className="h-8 w-8" />
         ) : (
-          <IconChartLine className="h-8 w-8 opacity-50" />
+          <IconChartLine className="h-8 w-8" />
         )}
       </div>
 
-      <h3 className="text-primary-950 mb-2 text-lg font-semibold">
+      <h3 className="text-primary-950 mb-2 text-xl font-semibold">
         {isLoadingModels
           ? 'Loading workspace...'
           : !hasModels
@@ -26,12 +26,12 @@ export const SimulationEmptyState = ({ isLoadingModels, hasModels }: SimulationE
             : 'No Results Yet'}
       </h3>
 
-      <p className="text-primary-600 max-w-sm text-sm">
+      <p className="text-primary-500 max-w-sm text-sm leading-relaxed">
         {isLoadingModels
           ? 'Please wait while we load your models.'
           : !hasModels
             ? 'Upload a System Dynamics model first to run a simulation.'
-            : 'Select a model and configure the settings to run a simulation.'}
+            : 'Select a model and configure the parameters in the left panel to run the simulation.'}
       </p>
     </div>
   )
