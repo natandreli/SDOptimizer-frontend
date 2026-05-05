@@ -179,6 +179,9 @@ export const UploadForm = ({ onSuccess }: UploadFormProps) => {
           <input
             type="file"
             onChange={handleChange}
+            onClick={(e) => {
+              ; (e.target as HTMLInputElement).value = ''
+            }}
             accept=".mdl"
             className="absolute inset-0 cursor-pointer opacity-0"
           />

@@ -1,12 +1,9 @@
 import type { GetModelResponse } from '@/services/api/models/types'
 import { IconChartDots3, IconTrash } from '@tabler/icons-react'
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card'
-import { Button } from '@/components/ui/button'
 import { useModal } from '@/hooks/use-modal'
 import { ModelDetailsModal } from '@/components/features/models/modals/model-details-modal'
-import { deleteModel } from '@/services/api/models'
-import { useMutation, useQueryClient } from '@tanstack/react-query'
-import { useToast } from '@/hooks/use-toast'
+import { DeleteModelModal } from '@/components/features/models/modals/delete-model-modal'
 
 type ModelsListProps = {
   models: GetModelResponse[] | undefined
@@ -15,19 +12,6 @@ type ModelsListProps = {
 
 export const ModelsList = ({ models, isLoading }: ModelsListProps) => {
   const modal = useModal()
-  const toast = useToast()
-  const queryClient = useQueryClient()
-
-  const deleteMutation = useMutation({
-    mutationFn: deleteModel,
-    onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ['models'] })
-      toast.success('Model deleted successfully')
-    },
-    onError: () => {
-      toast.error('Failed to delete model')
-    },
-  })
 
   const handleViewDetails = (modelData: GetModelResponse) => {
     if (!modelData.model) {
@@ -37,35 +21,12 @@ export const ModelsList = ({ models, isLoading }: ModelsListProps) => {
   }
 
   const handleDelete = (modelId: string, modelFileName: string) => {
-    modal.open(
-      <div className="space-y-4">
-        <h3 className="text-primary-950 text-lg font-semibold">Delete Model</h3>
-        <p className="text-primary-900/75 text-sm">
-          Are you sure you want to delete <strong>{modelFileName}</strong> model? This action cannot
-          be undone.
-        </p>
-        <div className="flex justify-end gap-3">
-          <Button variant="grey" onClick={() => modal.close()}>
-            Cancel
-          </Button>
-          <Button
-            variant="error"
-            onClick={() => {
-              deleteMutation.mutate(modelId)
-              modal.close()
-            }}
-            isLoading={deleteMutation.isPending}
-          >
-            Delete
-          </Button>
-        </div>
-      </div>
-    )
+    modal.open(<DeleteModelModal modelId={modelId} modelFileName={modelFileName} />)
   }
 
   if (isLoading) {
     return (
-      <div className="flex flex-col items-center justify-center py-16">
+      <div className="flex h-full min-h-[400px] flex-col items-center justify-center py-16">
         <div className="relative">
           <div className="border-primary-200 h-10 w-10 rounded-full border-4"></div>
           <div className="absolute top-0 left-0 h-10 w-10 animate-spin rounded-full border-4 border-transparent border-t-sky-500"></div>
