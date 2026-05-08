@@ -184,6 +184,7 @@ export const OptimizationSetupForm = ({
                     step={1}
                     value={effectiveMaxRuns}
                     setValue={onMaxRunsChange}
+                    placeholder={optimizationOptions ? String(optimizationOptions.defaults.max_runs) : ''}
                     required
                     disabled={isSubmitting}
                     className="font-mono text-sm"
@@ -201,6 +202,7 @@ export const OptimizationSetupForm = ({
                     step={0.0001}
                     value={effectiveEpsilon}
                     setValue={onEpsilonChange}
+                    placeholder={optimizationOptions ? String(optimizationOptions.defaults.epsilon) : ''}
                     required
                     disabled={isSubmitting}
                     className="font-mono text-sm"
@@ -215,6 +217,7 @@ export const OptimizationSetupForm = ({
                     step={0.001}
                     value={effectiveGlobalRho}
                     setValue={onGlobalRhoChange}
+                    placeholder={optimizationOptions?.parameters?.[0] ? String(optimizationOptions.parameters[0].suggested_rho_factor) : ''}
                     required
                     disabled={isSubmitting}
                     className="font-mono text-sm"
