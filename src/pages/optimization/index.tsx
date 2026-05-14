@@ -350,7 +350,15 @@ export const OptimizationPage = () => {
                 hasModels={(models?.length ?? 0) > 0}
               />
             )}
-            {!optimizeMutation.isPending && result && <OptimizationResults result={result} />}
+            {!optimizeMutation.isPending && result && (
+              <OptimizationResults
+                result={result}
+                modelName={
+                  models?.find((m) => m.model_id === selectedModelId)?.model?.file_name ||
+                  selectedModelId
+                }
+              />
+            )}
           </div>
         </section>
       </div>
