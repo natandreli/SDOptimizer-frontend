@@ -179,9 +179,9 @@ export const SimulationPage = () => {
               setTotalTime('')
               setParameterOverrides({})
             }}
-            dt={effectiveDt}
+            dt={dt}
             onDtChange={setDt}
-            totalTime={effectiveTotalTime}
+            totalTime={totalTime}
             onTotalTimeChange={setTotalTime}
             parameterOverrides={parameterOverrides}
             onParameterOverridesChange={setParameterOverrides}

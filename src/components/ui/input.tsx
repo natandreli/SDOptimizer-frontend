@@ -41,10 +41,8 @@ export const Input = (props: InputProps) => {
 
     if (props.type === 'number') {
       if (value === '') {
-        if (!props.required) {
-          props.setValue?.(value)
-          props.onChange?.(event)
-        }
+        props.setValue?.(value)
+        props.onChange?.(event)
         return
       }
 
@@ -57,7 +55,7 @@ export const Input = (props: InputProps) => {
 
       const numValue = parseFloat(value)
 
-      if (isNaN(numValue) || numValue < min || numValue > max) {
+      if (isNaN(numValue) || numValue > max) {
         return
       }
     }

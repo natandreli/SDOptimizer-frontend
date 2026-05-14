@@ -106,6 +106,7 @@ export const SimulationSetupForm = ({
                         step={1}
                         value={totalTime}
                         setValue={onTotalTimeChange}
+                        placeholder={simulationOptions ? String(simulationOptions.defaults.total_time) : ''}
                         required
                         disabled={isSubmitting}
                         className="font-mono text-sm"
@@ -123,6 +124,7 @@ export const SimulationSetupForm = ({
                       step={0.01}
                       value={dt}
                       setValue={onDtChange}
+                      placeholder={simulationOptions ? String(simulationOptions.defaults.dt) : ''}
                       required
                       disabled={isSubmitting}
                       className="font-mono text-sm"

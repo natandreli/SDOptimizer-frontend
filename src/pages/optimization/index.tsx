@@ -294,11 +294,11 @@ export const OptimizationPage = () => {
             effectiveDirection={effectiveDirection}
             onDirectionChange={setSelectedDirection}
             directionOptions={DIRECTION_OPTIONS}
-            effectiveEpsilon={effectiveEpsilon}
+            effectiveEpsilon={epsilon}
             onEpsilonChange={setEpsilon}
-            effectiveMaxRuns={effectiveMaxRuns}
+            effectiveMaxRuns={maxRuns}
             onMaxRunsChange={setMaxRuns}
-            effectiveGlobalRho={effectiveGlobalRho}
+            effectiveGlobalRho={globalRho}
             onGlobalRhoChange={setGlobalRho}
             initialValues={initialValues}
             onInitialValuesChange={setInitialValues}
