@@ -20,9 +20,11 @@ import {
 } from 'recharts'
 import type { OptimizationResult } from '@/services/api/models/types'
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card'
+import { OptimizationExport } from './optimization-export'
 
 type OptimizationResultsProps = {
   result: OptimizationResult
+  modelName: string
 }
 
 const formatNumber = (value: number, maxDecimals: number = 6) => {
@@ -49,7 +51,7 @@ const PARAMETER_COLORS = [
   '#84cc16',
 ]
 
-export const OptimizationResults = ({ result }: OptimizationResultsProps) => {
+export const OptimizationResults = ({ result, modelName }: OptimizationResultsProps) => {
   const improved = result.improvement_percentage > 0
   const unchanged = Math.abs(result.improvement_percentage) < 0.001
 
@@ -92,6 +94,9 @@ export const OptimizationResults = ({ result }: OptimizationResultsProps) => {
 
   return (
     <section className="space-y-5">
+      <div className="flex items-center justify-between">
+        <OptimizationExport result={result} modelName={modelName} />
+      </div>
       <div className="grid grid-cols-1 gap-4 lg:grid-cols-3">
         <Card
           className={`relative overflow-hidden lg:col-span-1 ${
@@ -307,7 +312,7 @@ export const OptimizationResults = ({ result }: OptimizationResultsProps) => {
           <CardDescription>Reward obtained per run and best reward so far.</CardDescription>
         </CardHeader>
         <CardContent>
-          <div className="h-[340px]">
+          <div id="reward-history-chart" className="h-[340px]">
             <ResponsiveContainer width="100%" height="100%">
               <LineChart
                 data={rewardHistoryData}
@@ -382,7 +387,7 @@ export const OptimizationResults = ({ result }: OptimizationResultsProps) => {
             </CardDescription>
           </CardHeader>
           <CardContent>
-            <div className="h-[340px]">
+            <div id="parameter-evolution-chart" className="h-[340px]">
               <ResponsiveContainer width="100%" height="100%">
                 <LineChart
                   data={parameterEvolutionData}
