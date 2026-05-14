@@ -11,7 +11,7 @@ type ButtonProps = Readonly<
     disableOnLoading?: boolean
     iconPosition?: 'left' | 'right'
     altColor?: boolean
-    variant?: 'primary' | 'alt' | 'error' | 'grey' | 'success'
+    variant?: 'primary' | 'alt' | 'error' | 'grey' | 'success' | 'outline' | 'subtle'
     size?: 'xs' | 'sm' | 'md' | 'lg'
   }
 >
@@ -60,6 +60,10 @@ export const Button = ({
           'border-emerald-200 bg-emerald-50 text-emerald-900 hover:border-emerald-300 hover:bg-emerald-100',
         variant === 'success' &&
           'border-emerald-600 bg-emerald-600 text-emerald-50 hover:border-emerald-700 hover:bg-emerald-700',
+        variant === 'outline' &&
+          'border-primary-300 text-primary-700 hover:border-primary-400 hover:bg-primary-50 bg-transparent',
+        variant === 'subtle' &&
+          'bg-primary-100 text-primary-800 hover:bg-primary-200 border-transparent shadow-none',
         className
       )}
     >
