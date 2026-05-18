@@ -124,8 +124,9 @@ export const OptimizationSetupForm = ({
   }
 
   return (
-    <form onSubmit={onSubmit} className="flex h-full flex-col gap-5">
-      {/* Setup Card */}
+    <form onSubmit={onSubmit} className="flex h-full flex-col gap-4 overflow-hidden">
+      <div className="flex-1 overflow-y-auto space-y-5 pr-1.5 scrollbar-thin">
+        {/* Setup Card */}
       <div className="border-primary-200/90 bg-primary-50/95 flex-shrink-0 rounded-xl border p-4 shadow-sm">
         <div className="mb-3 flex items-center gap-2">
           <IconSettings className="text-primary-700 h-4 w-4" />
@@ -301,18 +302,6 @@ export const OptimizationSetupForm = ({
                       <span className="text-primary-900">Total Steps:</span>
                       <span className="font-mono text-sky-700">{totalMathSteps.toLocaleString()}</span>
                     </div>
-                    <div className="flex justify-between text-[11px] font-semibold text-primary-600 mt-1">
-                      <span>Est. Duration:</span>
-                      <span className="font-mono text-sky-800">
-                        {totalMathSteps < 50000
-                          ? '< 3 seconds'
-                          : totalMathSteps < 150000
-                            ? '~3 - 8 seconds'
-                            : totalMathSteps < 500000
-                              ? '~8 - 20 seconds'
-                              : `~${Math.ceil(totalMathSteps / 25000)} seconds`}
-                      </span>
-                    </div>
                   </div>
                 </motion.div>
               )}
@@ -331,9 +320,9 @@ export const OptimizationSetupForm = ({
             animate={{ opacity: 1, height: 'auto' }}
             exit={{ opacity: 0, height: 0 }}
             transition={{ duration: 0.3, ease: 'easeInOut' }}
-            className="flex min-h-0 flex-1 flex-col overflow-hidden"
+            className="flex flex-col shrink-0"
           >
-            <div className="border-primary-200/90 bg-primary-50/95 flex min-h-0 flex-1 flex-col rounded-xl border p-4 shadow-sm">
+            <div className="border-primary-200/90 bg-primary-50/95 flex flex-col rounded-xl border p-4 shadow-sm">
               <div className="mb-3 flex shrink-0 items-center justify-between">
                 <div className="flex items-center gap-2">
                   <IconAdjustments className="text-primary-700 h-4 w-4" />
@@ -349,7 +338,7 @@ export const OptimizationSetupForm = ({
                 </button>
               </div>
 
-              <div className="min-h-0 flex-1 snap-y snap-mandatory space-y-3 overflow-y-auto pr-1 pb-4">
+              <div className="space-y-3 pb-2">
                 {optimizationOptions.parameters.map((parameter) => (
                   <div
                     key={parameter.name}
@@ -418,6 +407,7 @@ export const OptimizationSetupForm = ({
             </div>
           </motion.div>
         )}
+      </div>
 
       <AnimatePresence initial={false}>
         {selectedModelId && optimizationOptions && !isLoadingOptions && (
