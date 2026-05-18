@@ -83,6 +83,9 @@ export interface OptimizationConfig {
   target_variable: string
   statistic: 'final' | 'mean' | 'max' | 'min'
   direction: 'maximize' | 'minimize'
+  dt?: number
+  total_time?: number
+  final_time?: number
 }
 
 export interface OptimizationParameterOption {
@@ -97,6 +100,8 @@ export interface OptimizationDefaults {
   max_runs: number
   statistic: 'final' | 'mean' | 'max' | 'min'
   direction: 'maximize' | 'minimize'
+  dt?: number
+  total_time?: number
 }
 
 export interface OptimizationOptions {
@@ -137,6 +142,8 @@ export interface OptimizationResult {
   improvement_percentage: number
   parameter_changes: Record<string, ParameterChange>
   config_summary: OptimizationConfigSummary
+  steps_per_simulation?: number
+  total_mathematical_steps?: number
 }
 
 export interface OptimizationResponse {

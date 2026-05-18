@@ -189,7 +189,7 @@ export const OptimizationResults = ({ result, modelName }: OptimizationResultsPr
           <CardDescription>Summary of the optimization settings for this run.</CardDescription>
         </CardHeader>
         <CardContent>
-          <div className="grid grid-cols-2 gap-3 sm:grid-cols-3 lg:grid-cols-5">
+          <div className="grid grid-cols-2 gap-3 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-7">
             <div className="border-primary-200 bg-primary-50/80 rounded-lg border px-3 py-2.5">
               <p className="text-primary-600 text-[10px] font-semibold tracking-widest uppercase">
                 Target Variable
@@ -230,6 +230,26 @@ export const OptimizationResults = ({ result, modelName }: OptimizationResultsPr
                 {result.config_summary.epsilon}
               </p>
             </div>
+            {result.steps_per_simulation !== undefined && (
+              <div className="border-sky-200 bg-sky-50/40 rounded-lg border px-3 py-2.5">
+                <p className="text-sky-700 text-[10px] font-semibold tracking-widest uppercase">
+                  Steps / Sim
+                </p>
+                <p className="text-sky-950 mt-1 font-mono text-sm font-semibold">
+                  {result.steps_per_simulation.toLocaleString()}
+                </p>
+              </div>
+            )}
+            {result.total_mathematical_steps !== undefined && (
+              <div className="border-emerald-200 bg-emerald-50/40 rounded-lg border px-3 py-2.5">
+                <p className="text-emerald-700 text-[10px] font-semibold tracking-widest uppercase">
+                  Total Steps
+                </p>
+                <p className="text-emerald-950 mt-1 font-mono text-sm font-semibold">
+                  {result.total_mathematical_steps.toLocaleString()}
+                </p>
+              </div>
+            )}
           </div>
         </CardContent>
       </Card>

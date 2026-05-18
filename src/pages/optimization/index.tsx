@@ -35,6 +35,8 @@ export const OptimizationPage = () => {
   const [boundMins, setBoundMins] = useState<NumericFieldState>({})
   const [boundMaxs, setBoundMaxs] = useState<NumericFieldState>({})
   const [globalRho, setGlobalRho] = useState('')
+  const [dt, setDt] = useState('')
+  const [totalTime, setTotalTime] = useState('')
   const [result, setResult] = useState<OptimizationResult | null>(null)
   const [progress, setProgress] = useState(0)
 
@@ -60,6 +62,10 @@ export const OptimizationPage = () => {
     epsilon || (optimizationOptions ? String(optimizationOptions.defaults.epsilon) : '')
   const effectiveMaxRuns =
     maxRuns || (optimizationOptions ? String(optimizationOptions.defaults.max_runs) : '')
+  const effectiveDt =
+    dt || (optimizationOptions?.defaults?.dt ? String(optimizationOptions.defaults.dt) : '')
+  const effectiveTotalTime =
+    totalTime || (optimizationOptions?.defaults?.total_time ? String(optimizationOptions.defaults.total_time) : '')
   const effectiveGlobalRho =
     globalRho ||
     (optimizationOptions?.parameters?.[0]
@@ -162,6 +168,8 @@ export const OptimizationPage = () => {
     const epsilonValue = Number(effectiveEpsilon)
     const maxRunsValue = Number(effectiveMaxRuns)
     const globalRhoValue = Number(effectiveGlobalRho)
+    const dtValue = effectiveDt ? Number(effectiveDt) : undefined
+    const totalTimeValue = effectiveTotalTime ? Number(effectiveTotalTime) : undefined
 
     if (!Number.isFinite(epsilonValue) || epsilonValue <= 0) {
       toast.error('Epsilon must be greater than 0')
@@ -175,6 +183,16 @@ export const OptimizationPage = () => {
 
     if (!Number.isFinite(globalRhoValue) || globalRhoValue <= 0) {
       toast.error('Rho factor must be greater than 0')
+      return
+    }
+
+    if (dtValue !== undefined && (!Number.isFinite(dtValue) || dtValue <= 0)) {
+      toast.error('Time step (dt) must be greater than 0')
+      return
+    }
+
+    if (totalTimeValue !== undefined && (!Number.isFinite(totalTimeValue) || totalTimeValue <= 0)) {
+      toast.error('Final time must be greater than 0')
       return
     }
 
@@ -241,6 +259,8 @@ export const OptimizationPage = () => {
         statistic: effectiveStatistic as OptimizationOptions['statistics'][number],
         target_variable: effectiveTargetVariable,
         direction: effectiveDirection as OptimizationTargetDirection,
+        dt: dtValue,
+        total_time: totalTimeValue,
       },
     })
   }
@@ -251,7 +271,9 @@ export const OptimizationPage = () => {
     Boolean(effectiveStatistic) &&
     Boolean(effectiveTargetVariable) &&
     Boolean(effectiveEpsilon) &&
-    Boolean(effectiveMaxRuns)
+    Boolean(effectiveMaxRuns) &&
+    Boolean(effectiveDt) &&
+    Boolean(effectiveTotalTime)
 
   return (
     <div className="flex min-h-0 flex-1 flex-col gap-4">
@@ -280,6 +302,8 @@ export const OptimizationPage = () => {
               setBoundMins({})
               setBoundMaxs({})
               setGlobalRho('')
+              setDt('')
+              setTotalTime('')
             }}
             optimizationOptions={optimizationOptions}
             isLoadingOptions={isLoadingOptions}
@@ -300,6 +324,10 @@ export const OptimizationPage = () => {
             onMaxRunsChange={setMaxRuns}
             effectiveGlobalRho={globalRho}
             onGlobalRhoChange={setGlobalRho}
+            effectiveDt={dt}
+            onDtChange={setDt}
+            effectiveTotalTime={totalTime}
+            onTotalTimeChange={setTotalTime}
             initialValues={initialValues}
             onInitialValuesChange={setInitialValues}
             boundMins={boundMins}

@@ -42,6 +42,11 @@ interface OptimizationSetupFormProps {
   effectiveGlobalRho: string
   onGlobalRhoChange: (value: string) => void
 
+  effectiveDt: string
+  onDtChange: (value: string) => void
+  effectiveTotalTime: string
+  onTotalTimeChange: (value: string) => void
+
   initialValues: Record<string, string>
   onInitialValuesChange: (updater: (prev: Record<string, string>) => Record<string, string>) => void
   boundMins: Record<string, string>
@@ -85,6 +90,11 @@ export const OptimizationSetupForm = ({
   effectiveGlobalRho,
   onGlobalRhoChange,
 
+  effectiveDt,
+  onDtChange,
+  effectiveTotalTime,
+  onTotalTimeChange,
+
   initialValues,
   onInitialValuesChange,
   boundMins,
@@ -94,6 +104,13 @@ export const OptimizationSetupForm = ({
 
   isConfigReady,
 }: OptimizationSetupFormProps) => {
+  const parsedTotalTime = Number(effectiveTotalTime) || 0
+  const parsedDt = Number(effectiveDt) || 0
+  const parsedMaxRuns = Number(effectiveMaxRuns) || 0
+
+  const stepsPerSim = parsedDt > 0 ? Math.floor(parsedTotalTime / parsedDt) : 0
+  const totalMathSteps = stepsPerSim * parsedMaxRuns
+
   const modelPlaceholder = isModelsLoading
     ? 'Loading models...'
     : modelOptions.length === 0
@@ -224,6 +241,81 @@ export const OptimizationSetupForm = ({
                   />
                 </div>
               </div>
+
+              <div className="grid grid-cols-2 gap-3">
+                <div className="space-y-1">
+                  <span className="text-primary-700 mb-1 text-[10px] font-semibold tracking-widest uppercase">
+                    Final Time
+                  </span>
+                  <Input
+                    type="number"
+                    min={0.0001}
+                    step={1}
+                    value={effectiveTotalTime}
+                    setValue={onTotalTimeChange}
+                    placeholder={optimizationOptions ? String(optimizationOptions.defaults.total_time) : ''}
+                    required
+                    disabled={isSubmitting}
+                    className="font-mono text-sm"
+                  />
+                </div>
+                <div className="space-y-1">
+                  <span className="text-primary-700 mb-1 text-[10px] font-semibold tracking-widest uppercase">
+                    Time Step (dt)
+                  </span>
+                  <Input
+                    type="number"
+                    min={0.0001}
+                    step={0.01}
+                    value={effectiveDt}
+                    setValue={onDtChange}
+                    placeholder={optimizationOptions ? String(optimizationOptions.defaults.dt) : ''}
+                    required
+                    disabled={isSubmitting}
+                    className="font-mono text-sm"
+                  />
+                </div>
+              </div>
+
+              {/* Optimization Load Preview Card */}
+              {stepsPerSim > 0 && parsedMaxRuns > 0 && (
+                <motion.div
+                  initial={{ opacity: 0, y: 10 }}
+                  animate={{ opacity: 1, y: 0 }}
+                  className="mt-3 border-sky-200 bg-sky-50/70 rounded-lg border p-3 text-xs shadow-sm"
+                >
+                  <div className="mb-1.5 flex items-center justify-between">
+                    <span className="text-sky-950 font-semibold text-[11px] tracking-wide uppercase">Workload preview</span>
+                  </div>
+                  <div className="text-primary-950 space-y-1 font-medium text-[11px]">
+                    <div className="flex justify-between">
+                      <span className="text-primary-800/80">Steps per Run:</span>
+                      <span className="font-mono">{stepsPerSim.toLocaleString()}</span>
+                    </div>
+                    <div className="flex justify-between">
+                      <span className="text-primary-800/80">Total Runs:</span>
+                      <span className="font-mono">{parsedMaxRuns.toLocaleString()}</span>
+                    </div>
+                    <div className="border-sky-200/50 my-1 border-t" />
+                    <div className="flex justify-between font-bold">
+                      <span className="text-primary-900">Total Steps:</span>
+                      <span className="font-mono text-sky-700">{totalMathSteps.toLocaleString()}</span>
+                    </div>
+                    <div className="flex justify-between text-[11px] font-semibold text-primary-600 mt-1">
+                      <span>Est. Duration:</span>
+                      <span className="font-mono text-sky-800">
+                        {totalMathSteps < 50000
+                          ? '< 3 seconds'
+                          : totalMathSteps < 150000
+                            ? '~3 - 8 seconds'
+                            : totalMathSteps < 500000
+                              ? '~8 - 20 seconds'
+                              : `~${Math.ceil(totalMathSteps / 25000)} seconds`}
+                      </span>
+                    </div>
+                  </div>
+                </motion.div>
+              )}
             </motion.div>
           )}
         </div>
