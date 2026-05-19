@@ -2,7 +2,7 @@ import { useMemo, useState, useRef, useEffect } from 'react'
 import { IconArrowsMove, IconCheck, IconRefresh } from '@tabler/icons-react'
 import type { ModelSchema, ModelVariable } from '@/services/api/models/types'
 import type { DiagramNode, DiagramEdge } from './stock-flow-diagram.types'
-import { buildGraphData } from '@/utils/graph-builder'
+import { buildGraphData, normalizeId } from '@/utils/graph-builder'
 import { computeLayout } from '@/utils/graph-layout'
 
 // ─── Geometric & Math Helpers ──────────────────────────────────────────────────
@@ -95,6 +95,9 @@ interface InfluenceEdgeRendererProps {
   isEditMode: boolean
   offset?: number
   onMouseDown: (e: React.MouseEvent, cx: number, cy: number) => void
+  isActive?: boolean
+  isFaded?: boolean
+  animateFlows?: boolean
 }
 
 function InfluenceEdgeRenderer({
@@ -103,6 +106,9 @@ function InfluenceEdgeRenderer({
   isEditMode,
   offset,
   onMouseDown,
+  isActive = false,
+  isFaded = false,
+  animateFlows = false,
 }: InfluenceEdgeRendererProps) {
   const source = nodes.find((n) => n.id === edge.source)
   const target = nodes.find((n) => n.id === edge.target)
@@ -134,15 +140,21 @@ function InfluenceEdgeRenderer({
 
   const d = `M ${startPt.x} ${startPt.y} Q ${cx} ${cy} ${endPt.x} ${endPt.y}`
 
+  const strokeColor = isActive ? '#f59e0b' : '#38bdf8'
+  const strokeWidth = isActive ? 2.5 : 1.5
+  const markerEnd = isActive ? 'url(#arrow-active)' : 'url(#arrow)'
+  const opacity = isFaded ? 0.25 : 1.0
+
   return (
-    <g>
+    <g style={{ opacity, transition: 'opacity 0.2s ease' }}>
       {/* Causal line path */}
       <path
         d={d}
         fill="none"
-        stroke="#38bdf8"
-        strokeWidth={1.5}
-        markerEnd="url(#arrow)"
+        stroke={strokeColor}
+        strokeWidth={strokeWidth}
+        markerEnd={markerEnd}
+        className={isActive && animateFlows ? 'flow-active-pipe-flow-line' : undefined}
       />
 
       {/* Edit mode helpers */}
@@ -182,9 +194,19 @@ interface FlowPipeRendererProps {
   flowNode: DiagramNode
   nodes: DiagramNode[]
   edges: DiagramEdge[]
+  activeEdgeIds?: Set<string>
+  isFaded?: boolean
+  animateFlows?: boolean
 }
 
-function FlowPipeRenderer({ flowNode, nodes, edges }: FlowPipeRendererProps) {
+function FlowPipeRenderer({
+  flowNode,
+  nodes,
+  edges,
+  activeEdgeIds,
+  isFaded = false,
+  animateFlows = false,
+}: FlowPipeRendererProps) {
   const sourceStockEdge = edges.find((e) => e.kind === 'flow-pipe' && e.target === flowNode.id)
   const targetStockEdge = edges.find((e) => e.kind === 'flow-pipe' && e.source === flowNode.id)
 
@@ -262,8 +284,18 @@ function FlowPipeRenderer({ flowNode, nodes, edges }: FlowPipeRendererProps) {
   const pipeEndX = arrowEndPt.x - ux * 13
   const pipeEndY = arrowEndPt.y - uy * 13
 
+  // Active status calculation
+  const isSourceActive = sourceStockEdge && activeEdgeIds ? activeEdgeIds.has(sourceStockEdge.id) : false
+  const isTargetActive = targetStockEdge && activeEdgeIds ? activeEdgeIds.has(targetStockEdge.id) : false
+  const isActive = isSourceActive || isTargetActive
+
+  const outerStroke = isActive ? '#d97706' : '#0284c7'
+  const innerStroke = isActive ? '#fef3c7' : '#e0f2fe'
+  const arrowheadFill = isActive ? '#d97706' : '#0284c7'
+  const opacity = isFaded ? 0.25 : 1.0
+
   return (
-    <g>
+    <g style={{ opacity, transition: 'opacity 0.2s ease' }}>
       {/* Clouds */}
       {hasSourceCloud && <CloudIcon x={sourceCloudX} y={sourceCloudY} />}
       {hasTargetCloud && <CloudIcon x={targetCloudX} y={targetCloudY} />}
@@ -272,7 +304,7 @@ function FlowPipeRenderer({ flowNode, nodes, edges }: FlowPipeRendererProps) {
       <path
         d={`M ${startX} ${startY} L ${flowNode.x} ${flowNode.y} L ${pipeEndX} ${pipeEndY}`}
         fill="none"
-        stroke="#0284c7"
+        stroke={outerStroke}
         strokeWidth={8}
         strokeLinecap="square"
       />
@@ -281,16 +313,28 @@ function FlowPipeRenderer({ flowNode, nodes, edges }: FlowPipeRendererProps) {
       <path
         d={`M ${startX} ${startY} L ${flowNode.x} ${flowNode.y} L ${pipeEndX} ${pipeEndY}`}
         fill="none"
-        stroke="#e0f2fe"
+        stroke={innerStroke}
         strokeWidth={4}
         strokeLinecap="square"
       />
+
+      {/* Dynamic Liquid Flow line inside active pipe */}
+      {isActive && (
+        <path
+          d={`M ${startX} ${startY} L ${flowNode.x} ${flowNode.y} L ${pipeEndX} ${pipeEndY}`}
+          fill="none"
+          stroke="#f59e0b"
+          strokeWidth={2}
+          strokeLinecap="round"
+          className={animateFlows ? "flow-active-pipe-flow-line" : undefined}
+        />
+      )}
 
       {/* Arrowhead */}
       <polygon
         points="0,0 -14,-7 -14,7"
         transform={`translate(${arrowEndPt.x}, ${arrowEndPt.y}) rotate(${deg})`}
-        fill="#0284c7"
+        fill={arrowheadFill}
       />
     </g>
   )
@@ -306,6 +350,8 @@ interface FlowValveRendererProps {
   onMouseDown: (e: React.MouseEvent) => void
   onMouseEnter: (nodeId: string) => void
   onMouseLeave: () => void
+  isActive?: boolean
+  isFaded?: boolean
 }
 
 function FlowValveRenderer({
@@ -316,6 +362,8 @@ function FlowValveRenderer({
   onMouseDown,
   onMouseEnter,
   onMouseLeave,
+  isActive = false,
+  isFaded = false,
 }: FlowValveRendererProps) {
   const { x, y, label } = node
   const handlers = {
@@ -353,8 +401,13 @@ function FlowValveRenderer({
 
   const className = `cursor-pointer ${isEditMode ? 'cursor-move select-none' : ''}`
 
+  const fillVal = isActive ? '#fef3c7' : '#ede9fe'
+  const strokeVal = isActive ? '#d97706' : '#7c3aed'
+  const labelFill = isActive ? '#b45309' : '#4d1d95'
+  const opacity = isFaded ? 0.25 : 1.0
+
   return (
-    <g {...handlers} className={className}>
+    <g {...handlers} className={className} style={{ opacity, transition: 'opacity 0.2s ease' }}>
       {/* Invisible hover hotspot */}
       <circle cx={x} cy={y} r={18} fill="transparent" />
 
@@ -374,14 +427,14 @@ function FlowValveRenderer({
       <g transform={`translate(${x}, ${y}) rotate(${deg})`}>
         <polygon
           points="-12,-8 -12,8 0,0"
-          fill="#ede9fe"
-          stroke="#7c3aed"
+          fill={fillVal}
+          stroke={strokeVal}
           strokeWidth={2}
         />
         <polygon
           points="12,-8 12,8 0,0"
-          fill="#ede9fe"
-          stroke="#7c3aed"
+          fill={fillVal}
+          stroke={strokeVal}
           strokeWidth={2}
         />
         <circle
@@ -400,7 +453,7 @@ function FlowValveRenderer({
         dominantBaseline="middle"
         fontSize={11}
         fontWeight="600"
-        fill="#4d1d95"
+        fill={labelFill}
         style={{ pointerEvents: 'none', userSelect: 'none' }}
       >
         {label}
@@ -417,6 +470,11 @@ interface NodeRendererProps {
   onMouseDown: (e: React.MouseEvent) => void
   onMouseEnter: (nodeId: string) => void
   onMouseLeave: () => void
+  isActive?: boolean
+  isStartNode?: boolean
+  isFaded?: boolean
+  isOverridden?: boolean
+  animateFlows?: boolean
 }
 
 function NodeRenderer({
@@ -425,6 +483,11 @@ function NodeRenderer({
   onMouseDown,
   onMouseEnter,
   onMouseLeave,
+  isActive = false,
+  isStartNode = false,
+  isFaded = false,
+  isOverridden = false,
+  animateFlows = false,
 }: NodeRendererProps) {
   const { x, y, width, height, kind, label } = node
   if (kind === 'flow') return null // rendered separately by FlowValveRenderer
@@ -447,27 +510,35 @@ function NodeRenderer({
       textAnchor="middle"
       dominantBaseline="middle"
       fontSize={11}
-      fill="#1e293b"
-      fontWeight={kind === 'stock' ? '600' : 'normal'}
+      fill={isStartNode ? '#78350f' : '#1e293b'}
+      fontWeight={kind === 'stock' || isStartNode || isActive ? '600' : 'normal'}
       style={{ pointerEvents: 'none', userSelect: 'none' }}
     >
       {label}
     </text>
   )
 
+  const opacity = isFaded ? 0.25 : 1.0
+
   if (kind === 'stock') {
+    const strokeColor = isStartNode || isActive ? '#d97706' : '#0284c7'
+    const strokeWidth = isStartNode ? 3 : isActive ? 2.5 : 2
+    const fillVal = isStartNode || isActive ? '#fffbeb' : '#e0f2fe'
+    const extraClass = isStartNode && animateFlows ? 'pulse-active-node' : undefined
+
     return (
-      <g {...handlers} className={className}>
+      <g {...handlers} className={className} style={{ opacity, transition: 'opacity 0.2s ease' }}>
         <rect
           x={left}
           y={top}
           width={width}
           height={height}
           rx={6}
-          fill="#e0f2fe"
-          stroke="#0284c7"
-          strokeWidth={2}
+          fill={fillVal}
+          stroke={strokeColor}
+          strokeWidth={strokeWidth}
           strokeDasharray={isEditMode ? '4 2' : undefined}
+          className={extraClass}
         />
         {labelEl}
       </g>
@@ -475,17 +546,23 @@ function NodeRenderer({
   }
 
   if (kind === 'auxiliary') {
+    const strokeColor = isStartNode || isActive ? '#d97706' : '#d97706'
+    const strokeWidth = isStartNode ? 3 : isActive ? 2.5 : 2
+    const fillVal = isStartNode || isActive ? '#fffbeb' : '#fef3c7'
+    const extraClass = isStartNode && animateFlows ? 'pulse-active-node' : undefined
+
     return (
-      <g {...handlers} className={className}>
+      <g {...handlers} className={className} style={{ opacity, transition: 'opacity 0.2s ease' }}>
         <ellipse
           cx={x}
           cy={y}
           rx={width / 2}
           ry={height / 2}
-          fill="#fef3c7"
-          stroke="#d97706"
-          strokeWidth={2}
+          fill={fillVal}
+          stroke={strokeColor}
+          strokeWidth={strokeWidth}
           strokeDasharray={isEditMode ? '4 2' : undefined}
+          className={extraClass}
         />
         {labelEl}
       </g>
@@ -493,15 +570,22 @@ function NodeRenderer({
   }
 
   if (kind === 'shadow') {
+    const fillVal = isStartNode || isActive ? '#fffbeb' : 'transparent'
+    const strokeVal = isStartNode || isActive ? '#d97706' : '#94a3b8'
+    const textFill = isStartNode || isActive ? '#d97706' : '#64748b'
+
     return (
-      <g {...handlers} className={className}>
+      <g {...handlers} className={className} style={{ opacity, transition: 'opacity 0.2s ease' }}>
         {/* Invisible hotspot for mouse capture */}
         <rect
           x={left}
           y={top}
           width={width}
           height={height}
-          fill="transparent"
+          fill={fillVal}
+          rx={4}
+          stroke={isStartNode || isActive ? strokeVal : 'none'}
+          strokeWidth={1.5}
         />
         {isEditMode && (
           <rect
@@ -521,8 +605,8 @@ function NodeRenderer({
           textAnchor="middle"
           dominantBaseline="middle"
           fontSize={11}
-          fill="#64748b"
-          fontWeight="normal"
+          fill={textFill}
+          fontWeight={isStartNode || isActive ? '600' : 'normal'}
           style={{ pointerEvents: 'none', userSelect: 'none' }}
         >
           {label}
@@ -532,19 +616,34 @@ function NodeRenderer({
   }
 
   // parameter
+  const strokeColor = isStartNode || isActive ? '#d97706' : isOverridden ? '#d97706' : '#94a3b8'
+  const strokeWidth = isStartNode ? 3 : isActive || isOverridden ? 2.5 : 1.5
+  const fillVal = isStartNode || isActive ? '#fffbeb' : isOverridden ? '#fffbeb' : '#f8fafc'
+  const extraClass = isStartNode && animateFlows ? 'pulse-active-node' : undefined
+
   return (
-    <g {...handlers} className={className}>
+    <g {...handlers} className={className} style={{ opacity, transition: 'opacity 0.2s ease' }}>
       <rect
         x={left}
         y={top}
         width={width}
         height={height}
         rx={4}
-        fill="#f8fafc"
-        stroke="#94a3b8"
-        strokeWidth={1.5}
-        strokeDasharray={isEditMode ? '2 2' : '4 2'}
+        fill={fillVal}
+        stroke={strokeColor}
+        strokeWidth={strokeWidth}
+        strokeDasharray={isEditMode ? '2 2' : isOverridden ? undefined : '4 2'}
+        className={extraClass}
       />
+      {/* Overridden indicator dot */}
+      {isOverridden && !isStartNode && !isActive && (
+        <circle
+          cx={left + width - 6}
+          cy={top + 6}
+          r={3}
+          fill="#d97706"
+        />
+      )}
       {labelEl}
     </g>
   )
@@ -618,9 +717,19 @@ function TooltipOverlay({ nodeId, nodes, model }: TooltipOverlayProps) {
 
 interface StockFlowDiagramProps {
   model: ModelSchema
+  activeParam?: string | null
+  parameterOverrides?: Record<string, string>
+  readOnly?: boolean
+  animateFlows?: boolean
 }
 
-export function StockFlowDiagram({ model }: StockFlowDiagramProps) {
+export function StockFlowDiagram({
+  model,
+  activeParam = null,
+  parameterOverrides = {},
+  readOnly = false,
+  animateFlows = false,
+}: StockFlowDiagramProps) {
   const graphData = useMemo(() => buildGraphData(model), [model])
   const [nodes, setNodes] = useState<DiagramNode[]>([])
   const [isEditMode, setIsEditMode] = useState(false)
@@ -632,6 +741,55 @@ export function StockFlowDiagram({ model }: StockFlowDiagramProps) {
   const [zoom, setZoom] = useState(1)
   const [hoveredNodeId, setHoveredNodeId] = useState<string | null>(null)
 
+  // Causal feedback highlighting
+  const startNodeId = useMemo(() => {
+    if (!animateFlows) return null
+    if (activeParam) {
+      return normalizeId(activeParam)
+    }
+    return hoveredNodeId
+  }, [activeParam, hoveredNodeId, animateFlows])
+
+  const downstreamNodeIds = useMemo(() => {
+    if (!startNodeId) return new Set<string>()
+    const visited = new Set<string>()
+    const queue = [startNodeId]
+    while (queue.length > 0) {
+      const curr = queue.shift()!
+      for (const edge of graphData.edges) {
+        if (edge.source === curr && !visited.has(edge.target)) {
+          visited.add(edge.target)
+          queue.push(edge.target)
+        }
+      }
+    }
+    return visited
+  }, [startNodeId, graphData.edges])
+
+  const activeNodeIds = useMemo(() => {
+    const set = new Set<string>()
+    if (startNodeId) {
+      set.add(startNodeId)
+      downstreamNodeIds.forEach((id) => set.add(id))
+    }
+    return set
+  }, [startNodeId, downstreamNodeIds])
+
+  const activeEdgeIds = useMemo(() => {
+    const set = new Set<string>()
+    if (!startNodeId) return set
+    for (const edge of graphData.edges) {
+      const isSrcActive = edge.source === startNodeId || downstreamNodeIds.has(edge.source)
+      const isTgtActive = downstreamNodeIds.has(edge.target)
+      if (isSrcActive && isTgtActive) {
+        set.add(edge.id)
+      }
+    }
+    return set
+  }, [startNodeId, downstreamNodeIds, graphData.edges])
+
+  const hasAnyActive = Boolean(startNodeId)
+
   const dragRef = useRef<{ active: boolean; startX: number; startY: number; panX: number; panY: number }>({
     active: false,
     startX: 0,
@@ -642,16 +800,62 @@ export function StockFlowDiagram({ model }: StockFlowDiagramProps) {
 
   const dragOffsetRef = useRef({ x: 0, y: 0 })
 
-  // Initialize and reset nodes when graph structure or model changes
+  const handleSaveLayout = (updatedNodes: DiagramNode[], offsets: Record<string, number>) => {
+    try {
+      const layoutData = {
+        nodes: updatedNodes.map((n) => ({ id: n.id, x: n.x, y: n.y })),
+        edgeOffsets: offsets,
+      }
+      localStorage.setItem(`sd_layout_${model.file_name}`, JSON.stringify(layoutData))
+    } catch (e) {
+      console.error('Failed to save diagram layout', e)
+    }
+  }
+
+  // Initialize and reset nodes when graph structure or model changes (or when loading from storage)
   useEffect(() => {
     if (graphData.nodes.length > 0) {
-      setNodes(computeLayout(graphData.nodes, graphData.edges))
-      setEdgeOffsets({})
+      const defaultNodes = computeLayout(graphData.nodes, graphData.edges)
+      let initialNodes = defaultNodes
+      let initialOffsets = {}
+
+      try {
+        const saved = localStorage.getItem(`sd_layout_${model.file_name}`)
+        if (saved) {
+          const parsed = JSON.parse(saved)
+          if (parsed && typeof parsed === 'object') {
+            if (Array.isArray(parsed.nodes)) {
+              const savedCoords = new Map<string, { x: number; y: number }>()
+              parsed.nodes.forEach((n: any) => {
+                if (n && typeof n.id === 'string' && typeof n.x === 'number' && typeof n.y === 'number') {
+                  savedCoords.set(n.id, { x: n.x, y: n.y })
+                }
+              })
+
+              initialNodes = defaultNodes.map((node) => {
+                const savedPos = savedCoords.get(node.id)
+                if (savedPos) {
+                  return { ...node, x: savedPos.x, y: savedPos.y }
+                }
+                return node
+              })
+            }
+            if (parsed.edgeOffsets && typeof parsed.edgeOffsets === 'object') {
+              initialOffsets = parsed.edgeOffsets
+            }
+          }
+        }
+      } catch (e) {
+        console.error('Failed to load saved diagram layout', e)
+      }
+
+      setNodes(initialNodes)
+      setEdgeOffsets(initialOffsets)
     } else {
       setNodes([])
       setEdgeOffsets({})
     }
-  }, [graphData])
+  }, [graphData, model.file_name])
 
   // ── Pan handlers ────────────────────────────────────────────────────────────
   const handleMouseDown = (e: React.MouseEvent<SVGSVGElement>) => {
@@ -767,48 +971,59 @@ export function StockFlowDiagram({ model }: StockFlowDiagramProps) {
   return (
     <div className="relative">
       {/* Controls Overlay */}
-      <div className="absolute right-3 top-3 z-10 flex gap-2">
-        {isEditMode && (
+      {!readOnly && (
+        <div className="absolute right-3 top-3 z-10 flex gap-2">
+          {isEditMode && (
+            <button
+              type="button"
+              onClick={() => {
+                if (graphData.nodes.length > 0) {
+                  const defaultNodes = computeLayout(graphData.nodes, graphData.edges)
+                  setNodes(defaultNodes)
+                  setEdgeOffsets({})
+                  try {
+                    localStorage.removeItem(`sd_layout_${model.file_name}`)
+                  } catch (e) {
+                    console.error('Failed to reset saved layout', e)
+                  }
+                }
+              }}
+              className="flex items-center gap-1 rounded-lg border border-primary-200 bg-white px-2.5 py-1.5 text-xs font-semibold text-primary-700 shadow-sm transition-all hover:bg-primary-50 focus:outline-none focus:ring-2 focus:ring-primary-500"
+              title="Restaurar distribución automática"
+            >
+              <IconRefresh className="h-3.5 w-3.5" />
+              Reiniciar
+            </button>
+          )}
           <button
             type="button"
             onClick={() => {
-              if (graphData.nodes.length > 0) {
-                setNodes(computeLayout(graphData.nodes, graphData.edges))
-                setEdgeOffsets({})
+              if (isEditMode) {
+                handleSaveLayout(nodes, edgeOffsets)
               }
+              setIsEditMode(!isEditMode)
+              setHoveredNodeId(null)
             }}
-            className="flex items-center gap-1 rounded-lg border border-primary-200 bg-white px-2.5 py-1.5 text-xs font-semibold text-primary-700 shadow-sm transition-all hover:bg-primary-50 focus:outline-none focus:ring-2 focus:ring-primary-500"
-            title="Restaurar distribución automática"
+            className={`flex items-center gap-1.5 rounded-lg border px-3 py-1.5 text-xs font-semibold shadow-sm transition-all focus:outline-none focus:ring-2 ${
+              isEditMode
+                ? 'border-amber-600 bg-amber-500 text-white hover:bg-amber-600 focus:ring-amber-500'
+                : 'border-primary-200 bg-white text-primary-700 hover:bg-primary-50 focus:ring-primary-500'
+            }`}
           >
-            <IconRefresh className="h-3.5 w-3.5" />
-            Reiniciar
+            {isEditMode ? (
+              <>
+                <IconCheck className="h-3.5 w-3.5" />
+                Guardar Distribución
+              </>
+            ) : (
+              <>
+                <IconArrowsMove className="h-3.5 w-3.5" />
+                Editar Distribución
+              </>
+            )}
           </button>
-        )}
-        <button
-          type="button"
-          onClick={() => {
-            setIsEditMode(!isEditMode)
-            setHoveredNodeId(null)
-          }}
-          className={`flex items-center gap-1.5 rounded-lg border px-3 py-1.5 text-xs font-semibold shadow-sm transition-all focus:outline-none focus:ring-2 ${
-            isEditMode
-              ? 'border-amber-600 bg-amber-500 text-white hover:bg-amber-600 focus:ring-amber-500'
-              : 'border-primary-200 bg-white text-primary-700 hover:bg-primary-50 focus:ring-primary-500'
-          }`}
-        >
-          {isEditMode ? (
-            <>
-              <IconCheck className="h-3.5 w-3.5" />
-              Guardar Distribución
-            </>
-          ) : (
-            <>
-              <IconArrowsMove className="h-3.5 w-3.5" />
-              Editar Distribución
-            </>
-          )}
-        </button>
-      </div>
+        </div>
+      )}
 
       <svg
         viewBox="0 0 900 500"
@@ -831,9 +1046,43 @@ export function StockFlowDiagram({ model }: StockFlowDiagramProps) {
           >
             <path d="M0,0 L0,6 L8,3 z" fill="#38bdf8" />
           </marker>
+          <marker
+            id="arrow-active"
+            markerWidth="8"
+            markerHeight="8"
+            refX="6"
+            refY="3"
+            orient="auto"
+          >
+            <path d="M0,0 L0,6 L8,3 z" fill="#f59e0b" />
+          </marker>
           <pattern id="grid" width="20" height="20" patternUnits="userSpaceOnUse">
             <path d="M 20 0 L 0 0 0 20" fill="none" stroke="#e2e8f0" strokeWidth="0.5" />
           </pattern>
+          <style>{`
+            @keyframes flow-dash {
+              to {
+                stroke-dashoffset: -20;
+              }
+            }
+            .flow-active-pipe-flow-line {
+              stroke-dasharray: 6 4;
+              animation: flow-dash 1.2s linear infinite;
+            }
+            @keyframes node-glow {
+              0%, 100% {
+                stroke-width: 3px;
+                filter: drop-shadow(0 0 2px rgba(245, 158, 11, 0.4));
+              }
+              50% {
+                stroke-width: 4px;
+                filter: drop-shadow(0 0 6px rgba(245, 158, 11, 0.7));
+              }
+            }
+            .pulse-active-node {
+              animation: node-glow 2s infinite ease-in-out;
+            }
+          `}</style>
         </defs>
 
         {/* Pan/zoom wrapper */}
@@ -859,6 +1108,9 @@ export function StockFlowDiagram({ model }: StockFlowDiagramProps) {
               isEditMode={isEditMode}
               offset={edgeOffsets[edge.id]}
               onMouseDown={(e, cx, cy) => handleEdgeMouseDown(e, edge.id, cx, cy)}
+              isActive={activeEdgeIds.has(edge.id)}
+              isFaded={hasAnyActive && !activeEdgeIds.has(edge.id)}
+              animateFlows={animateFlows}
             />
           ))}
 
@@ -869,6 +1121,9 @@ export function StockFlowDiagram({ model }: StockFlowDiagramProps) {
               flowNode={flowNode}
               nodes={nodes}
               edges={graphData.edges}
+              activeEdgeIds={activeEdgeIds}
+              isFaded={hasAnyActive && !activeNodeIds.has(flowNode.id)}
+              animateFlows={animateFlows}
             />
           ))}
 
@@ -881,6 +1136,11 @@ export function StockFlowDiagram({ model }: StockFlowDiagramProps) {
               onMouseDown={(e) => handleNodeMouseDown(e, node.id)}
               onMouseEnter={handleNodeEnter}
               onMouseLeave={handleNodeLeave}
+              isActive={activeNodeIds.has(node.id)}
+              isStartNode={node.id === startNodeId}
+              isFaded={hasAnyActive && !activeNodeIds.has(node.id)}
+              isOverridden={node.kind === 'parameter' && node.label in parameterOverrides}
+              animateFlows={animateFlows}
             />
           ))}
 
@@ -895,6 +1155,8 @@ export function StockFlowDiagram({ model }: StockFlowDiagramProps) {
               onMouseDown={(e) => handleNodeMouseDown(e, flowNode.id)}
               onMouseEnter={handleNodeEnter}
               onMouseLeave={handleNodeLeave}
+              isActive={activeNodeIds.has(flowNode.id)}
+              isFaded={hasAnyActive && !activeNodeIds.has(flowNode.id)}
             />
           ))}
 

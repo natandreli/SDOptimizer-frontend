@@ -27,6 +27,8 @@ type SimulationSetupFormProps = {
   isLoadingOptions?: boolean
   isSubmitting: boolean
   onSubmit: (event: FormEvent<HTMLFormElement>) => void
+  activeParam?: string | null
+  onActiveParamChange?: (name: string | null) => void
 }
 
 export const SimulationSetupForm = ({
@@ -44,6 +46,8 @@ export const SimulationSetupForm = ({
   isLoadingOptions,
   isSubmitting,
   onSubmit,
+  activeParam = null,
+  onActiveParamChange,
 }: SimulationSetupFormProps) => {
   const modelPlaceholder = isModelsLoading
     ? 'Loading models...'
@@ -172,12 +176,22 @@ export const SimulationSetupForm = ({
                     const currentValue =
                       parameterOverrides[parameter.name] ?? String(parameter.initial_value)
 
+                    const isParamActive = activeParam === parameter.name
+
                     return (
                       <div
                         key={parameter.name}
-                        className="border-primary-200/70 bg-primary-100/30 shrink-0 snap-start rounded-lg border p-3"
+                        className={`transition-all duration-150 shrink-0 snap-start rounded-lg border p-3 ${
+                          isParamActive
+                            ? 'border-amber-400 bg-amber-500/10 shadow-sm'
+                            : 'border-primary-200/70 bg-primary-100/30'
+                        }`}
+                        onMouseEnter={() => onActiveParamChange?.(parameter.name)}
+                        onMouseLeave={() => onActiveParamChange?.(null)}
                       >
-                        <p className="text-primary-900 mb-2 text-xs font-semibold">
+                        <p className={`mb-2 text-xs font-semibold transition-colors duration-150 ${
+                          isParamActive ? 'text-amber-900' : 'text-primary-900'
+                        }`}>
                           {parameter.name}
                         </p>
                         <Input
@@ -190,6 +204,8 @@ export const SimulationSetupForm = ({
                               [parameter.name]: value,
                             })
                           }
+                          onFocus={() => onActiveParamChange?.(parameter.name)}
+                          onBlur={() => onActiveParamChange?.(null)}
                           disabled={isSubmitting}
                           className="font-mono text-sm"
                         />

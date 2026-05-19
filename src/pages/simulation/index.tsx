@@ -8,6 +8,7 @@ import { SimulationSetupForm } from '@/components/features/simulation/simulation
 import { SimulationEmptyState } from '@/components/features/simulation/simulation-empty-state'
 import { SimulationResults } from '@/components/features/simulation/simulation-results'
 import { useToast } from '@/hooks/use-toast'
+import { StockFlowDiagram } from '@/components/features/models/modals/stock-flow-diagram'
 
 export const SimulationPage = () => {
   const toast = useToast()
@@ -17,6 +18,11 @@ export const SimulationPage = () => {
   const [parameterOverrides, setParameterOverrides] = useState<Record<string, string>>({})
   const [simulationProgress, setSimulationProgress] = useState(0)
   const [result, setResult] = useState<SimulationResult | null>(null)
+  
+  // Tab state: 'diagram' or 'results'
+  const [activeTab, setActiveTab] = useState<'diagram' | 'results'>('diagram')
+  // Active parameter hovered/focused state
+  const [activeParam, setActiveParam] = useState<string | null>(null)
 
   const { data: models, isLoading: isModelsLoading } = useQuery({
     queryKey: ['models'],
@@ -47,12 +53,20 @@ export const SimulationPage = () => {
     [models]
   )
 
+  const currentModelItem = useMemo(() => {
+    if (!selectedModelId || !models) return null
+    return models.find((m) => m.model_id === selectedModelId)
+  }, [selectedModelId, models])
+
+  const currentModelSchema = currentModelItem?.model
+
   const simulationMutation = useMutation({
     mutationFn: ({ modelId, config }: { modelId: string; config: SimulationConfig }) =>
       simulateModel(modelId, config),
     onSuccess: (data) => {
       setResult(data.result)
       setSimulationProgress(100)
+      setActiveTab('results')
       toast.success('Simulation completed successfully')
     },
     onError: (error: AxiosError<{ detail?: string }>) => {
@@ -178,6 +192,8 @@ export const SimulationPage = () => {
               setDt('')
               setTotalTime('')
               setParameterOverrides({})
+              setActiveTab('diagram')
+              setActiveParam(null)
             }}
             dt={dt}
             onDtChange={setDt}
@@ -189,14 +205,44 @@ export const SimulationPage = () => {
             isLoadingOptions={isLoadingOptionsComponent}
             isSubmitting={simulationMutation.isPending}
             onSubmit={handleRunSimulation}
+            activeParam={activeParam}
+            onActiveParamChange={setActiveParam}
           />
         </aside>
 
         <section className="border-primary-200/90 bg-primary-50/95 flex h-full min-h-0 flex-col rounded-xl border shadow-sm">
           <div className="border-primary-200/70 flex items-center justify-between border-b px-5 py-3">
-            <div className="flex items-center gap-2">
-              <IconChartLine className="text-primary-700 h-4 w-4" />
-              <span className="text-primary-950 text-base font-semibold">Results</span>
+            <div className="flex items-center gap-4">
+              <div className="flex items-center gap-2">
+                <IconChartLine className="text-primary-700 h-4 w-4" />
+                <span className="text-primary-950 text-base font-semibold">Results</span>
+              </div>
+              {selectedModelId && currentModelSchema && (
+                <div className="flex items-center gap-1 rounded-lg bg-primary-100 p-1">
+                  <button
+                    type="button"
+                    onClick={() => setActiveTab('diagram')}
+                    className={`rounded-md px-3 py-1.5 text-xs font-semibold transition-all ${
+                      activeTab === 'diagram'
+                        ? 'bg-white text-primary-950 shadow-sm'
+                        : 'text-primary-600 hover:text-primary-900 hover:bg-primary-50/50'
+                    }`}
+                  >
+                    Diagrama
+                  </button>
+                  <button
+                    type="button"
+                    onClick={() => setActiveTab('results')}
+                    className={`rounded-md px-3 py-1.5 text-xs font-semibold transition-all ${
+                      activeTab === 'results'
+                        ? 'bg-white text-primary-950 shadow-sm'
+                        : 'text-primary-600 hover:text-primary-900 hover:bg-primary-50/50'
+                    }`}
+                  >
+                    Resultados
+                  </button>
+                </div>
+              )}
             </div>
             <span
               className={`inline-flex items-center gap-1.5 rounded-full border px-2.5 py-1 text-xs font-medium ${statusConfig.badgeClass}`}
@@ -216,14 +262,25 @@ export const SimulationPage = () => {
           )}
 
           <div className="flex flex-1 flex-col overflow-y-auto p-5">
-            {!simulationMutation.isPending && !result && (
-              <SimulationEmptyState
-                isLoadingModels={isModelsLoading}
-                hasModels={modelOptions.length > 0}
+            {activeTab === 'diagram' && currentModelSchema ? (
+              <StockFlowDiagram
+                model={currentModelSchema}
+                activeParam={activeParam}
+                parameterOverrides={parameterOverrides}
+                readOnly={true}
               />
-            )}
+            ) : (
+              <>
+                {!simulationMutation.isPending && !result && (
+                  <SimulationEmptyState
+                    isLoadingModels={isModelsLoading}
+                    hasModels={modelOptions.length > 0}
+                  />
+                )}
 
-            {!simulationMutation.isPending && result && <SimulationResults result={result} />}
+                {!simulationMutation.isPending && result && <SimulationResults result={result} />}
+              </>
+            )}
           </div>
         </section>
       </div>
