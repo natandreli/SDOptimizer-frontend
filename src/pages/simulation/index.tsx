@@ -268,6 +268,7 @@ export const SimulationPage = () => {
                 activeParam={activeParam}
                 parameterOverrides={parameterOverrides}
                 readOnly={true}
+                animateFlows={true}
               />
             ) : (
               <>
