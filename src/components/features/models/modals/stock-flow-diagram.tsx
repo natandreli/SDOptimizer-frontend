@@ -92,9 +92,18 @@ function CloudIcon({ x, y }: { x: number; y: number }) {
 interface InfluenceEdgeRendererProps {
   edge: DiagramEdge
   nodes: DiagramNode[]
+  isEditMode: boolean
+  offset?: number
+  onMouseDown: (e: React.MouseEvent, cx: number, cy: number) => void
 }
 
-function InfluenceEdgeRenderer({ edge, nodes }: InfluenceEdgeRendererProps) {
+function InfluenceEdgeRenderer({
+  edge,
+  nodes,
+  isEditMode,
+  offset,
+  onMouseDown,
+}: InfluenceEdgeRendererProps) {
   const source = nodes.find((n) => n.id === edge.source)
   const target = nodes.find((n) => n.id === edge.target)
   if (!source || !target) return null
@@ -114,9 +123,9 @@ function InfluenceEdgeRenderer({ edge, nodes }: InfluenceEdgeRendererProps) {
   if (len > 0) {
     const px = -dy / len
     const py = dx / len
-    const offset = Math.min(40, len * 0.15 + 10)
-    cx = mx + px * offset
-    cy = my + py * offset
+    const finalOffset = offset !== undefined ? offset : Math.min(40, len * 0.15 + 10)
+    cx = mx + px * finalOffset
+    cy = my + py * finalOffset
   }
 
   // Find start and end points on node boundaries
@@ -126,13 +135,44 @@ function InfluenceEdgeRenderer({ edge, nodes }: InfluenceEdgeRendererProps) {
   const d = `M ${startPt.x} ${startPt.y} Q ${cx} ${cy} ${endPt.x} ${endPt.y}`
 
   return (
-    <path
-      d={d}
-      fill="none"
-      stroke="#38bdf8"
-      strokeWidth={1.5}
-      markerEnd="url(#arrow)"
-    />
+    <g>
+      {/* Causal line path */}
+      <path
+        d={d}
+        fill="none"
+        stroke="#38bdf8"
+        strokeWidth={1.5}
+        markerEnd="url(#arrow)"
+      />
+
+      {/* Edit mode helpers */}
+      {isEditMode && len > 0 && (
+        <>
+          {/* Dashed projection line from midpoint of straight segment to curve control point */}
+          <line
+            x1={mx}
+            y1={my}
+            x2={cx}
+            y2={cy}
+            stroke="#93c5fd"
+            strokeWidth={1}
+            strokeDasharray="2 2"
+            style={{ pointerEvents: 'none' }}
+          />
+          {/* Interaction handle at the control point */}
+          <circle
+            cx={cx}
+            cy={cy}
+            r={6}
+            fill="#ffffff"
+            stroke="#0284c7"
+            strokeWidth={2}
+            className="cursor-pointer transition-colors duration-150 hover:fill-[#0284c7] hover:stroke-[#025a87]"
+            onMouseDown={(e) => onMouseDown(e, cx, cy)}
+          />
+        </>
+      )}
+    </g>
   )
 }
 
@@ -585,6 +625,8 @@ export function StockFlowDiagram({ model }: StockFlowDiagramProps) {
   const [nodes, setNodes] = useState<DiagramNode[]>([])
   const [isEditMode, setIsEditMode] = useState(false)
   const [draggingNodeId, setDraggingNodeId] = useState<string | null>(null)
+  const [draggingEdgeId, setDraggingEdgeId] = useState<string | null>(null)
+  const [edgeOffsets, setEdgeOffsets] = useState<Record<string, number>>({})
 
   const [pan, setPan] = useState({ x: 0, y: 0 })
   const [zoom, setZoom] = useState(1)
@@ -604,15 +646,17 @@ export function StockFlowDiagram({ model }: StockFlowDiagramProps) {
   useEffect(() => {
     if (graphData.nodes.length > 0) {
       setNodes(computeLayout(graphData.nodes, graphData.edges))
+      setEdgeOffsets({})
     } else {
       setNodes([])
+      setEdgeOffsets({})
     }
   }, [graphData])
 
   // ── Pan handlers ────────────────────────────────────────────────────────────
   const handleMouseDown = (e: React.MouseEvent<SVGSVGElement>) => {
-    // If edit mode is active and we clicked on a node, dragging is handled by node handlers
-    if (draggingNodeId) return
+    // If edit mode is active and we clicked on a node or edge handle, dragging is handled separately
+    if (draggingNodeId || draggingEdgeId) return
     dragRef.current = { active: true, startX: e.clientX, startY: e.clientY, panX: pan.x, panY: pan.y }
   }
 
@@ -624,6 +668,28 @@ export function StockFlowDiagram({ model }: StockFlowDiagramProps) {
       setNodes((prev) =>
         prev.map((n) => (n.id === draggingNodeId ? { ...n, x: newX, y: newY } : n))
       )
+    } else if (draggingEdgeId) {
+      e.preventDefault()
+      const edge = influenceEdges.find((e) => e.id === draggingEdgeId)
+      if (!edge) return
+      const sourceNode = nodes.find((n) => n.id === edge.source)
+      const targetNode = nodes.find((n) => n.id === edge.target)
+      if (!sourceNode || !targetNode) return
+
+      const cx = (e.clientX - dragOffsetRef.current.x) / zoom
+      const cy = (e.clientY - dragOffsetRef.current.y) / zoom
+
+      const dx = targetNode.x - sourceNode.x
+      const dy = targetNode.y - sourceNode.y
+      const len = Math.sqrt(dx * dx + dy * dy)
+      if (len > 0) {
+        const mx = (sourceNode.x + targetNode.x) / 2
+        const my = (sourceNode.y + targetNode.y) / 2
+        const px = -dy / len
+        const py = dx / len
+        const newOffset = (cx - mx) * px + (cy - my) * py
+        setEdgeOffsets((prev) => ({ ...prev, [draggingEdgeId]: newOffset }))
+      }
     } else {
       const d = dragRef.current
       if (!d.active) return
@@ -634,6 +700,7 @@ export function StockFlowDiagram({ model }: StockFlowDiagramProps) {
   const stopDrag = () => {
     dragRef.current.active = false
     setDraggingNodeId(null)
+    setDraggingEdgeId(null)
   }
 
   // ── Node drag handler ───────────────────────────────────────────────────────
@@ -647,6 +714,18 @@ export function StockFlowDiagram({ model }: StockFlowDiagramProps) {
     dragOffsetRef.current = {
       x: e.clientX - node.x * zoom,
       y: e.clientY - node.y * zoom,
+    }
+  }
+
+  // ── Edge drag handler ───────────────────────────────────────────────────────
+  const handleEdgeMouseDown = (e: React.MouseEvent, edgeId: string, cx: number, cy: number) => {
+    if (!isEditMode) return
+    e.stopPropagation()
+    e.preventDefault()
+    setDraggingEdgeId(edgeId)
+    dragOffsetRef.current = {
+      x: e.clientX - cx * zoom,
+      y: e.clientY - cy * zoom,
     }
   }
 
@@ -679,7 +758,7 @@ export function StockFlowDiagram({ model }: StockFlowDiagramProps) {
   const influenceEdges = graphData.edges.filter((e) => e.kind === 'influence')
   const flowNodes = nodes.filter((n) => n.kind === 'flow')
 
-  const svgCursorClass = draggingNodeId
+  const svgCursorClass = (draggingNodeId || draggingEdgeId)
     ? 'cursor-grabbing'
     : isEditMode
     ? 'cursor-default'
@@ -695,6 +774,7 @@ export function StockFlowDiagram({ model }: StockFlowDiagramProps) {
             onClick={() => {
               if (graphData.nodes.length > 0) {
                 setNodes(computeLayout(graphData.nodes, graphData.edges))
+                setEdgeOffsets({})
               }
             }}
             className="flex items-center gap-1 rounded-lg border border-primary-200 bg-white px-2.5 py-1.5 text-xs font-semibold text-primary-700 shadow-sm transition-all hover:bg-primary-50 focus:outline-none focus:ring-2 focus:ring-primary-500"
@@ -772,7 +852,14 @@ export function StockFlowDiagram({ model }: StockFlowDiagramProps) {
 
           {/* Layer 1: Causal Influence lines (at the back) */}
           {influenceEdges.map((edge) => (
-            <InfluenceEdgeRenderer key={edge.id} edge={edge} nodes={nodes} />
+            <InfluenceEdgeRenderer
+              key={edge.id}
+              edge={edge}
+              nodes={nodes}
+              isEditMode={isEditMode}
+              offset={edgeOffsets[edge.id]}
+              onMouseDown={(e, cx, cy) => handleEdgeMouseDown(e, edge.id, cx, cy)}
+            />
           ))}
 
           {/* Layer 2: Flow pipes and clouds */}
