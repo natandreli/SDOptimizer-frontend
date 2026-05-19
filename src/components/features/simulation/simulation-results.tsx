@@ -40,8 +40,8 @@ const VariableChip = ({
     <div
       onClick={onClick}
       className={`inline-flex cursor-pointer items-center gap-1.5 rounded-full px-2.5 py-1 text-xs font-medium transition-colors ${isFocused
-          ? 'bg-primary-900 ring-primary-900/20 ring-offset-primary-50 text-white shadow-sm ring-2 ring-offset-2'
-          : 'bg-primary-100 text-primary-900 hover:bg-primary-200'
+        ? 'bg-primary-900 ring-primary-900/20 ring-offset-primary-50 text-white shadow-sm ring-2 ring-offset-2'
+        : 'bg-primary-100 text-primary-900 hover:bg-primary-200'
         }`}
     >
       <div className="h-2 w-2 rounded-full" style={{ backgroundColor: color }} />
@@ -77,8 +77,12 @@ export const SimulationResults = ({ result }: SimulationResultsProps) => {
   if (result !== prevResult) {
     setPrevResult(result)
     const keys = Object.keys(result.time_series)
-    setSelectedVariables(keys.length > 0 ? [keys[0]] : [])
-    setFocusedVariable(keys.length > 0 ? keys[0] : '')
+    const prevKeys = Object.keys(prevResult.time_series)
+    const hasSameKeys = keys.length === prevKeys.length && keys.every((val) => prevKeys.includes(val))
+    if (!hasSameKeys) {
+      setSelectedVariables(keys.length > 0 ? [keys[0]] : [])
+      setFocusedVariable(keys.length > 0 ? keys[0] : '')
+    }
   }
 
   const variableNames = useMemo(() => Object.keys(result.time_series), [result])
@@ -88,8 +92,20 @@ export const SimulationResults = ({ result }: SimulationResultsProps) => {
     if (selectedVariables.length === 0) return []
 
     const base = result.time_series[selectedVariables[0]] || []
+    const N = base.length
+    
+    const startTime = 0
+    const endTime = result.config.total_time ?? 100
+
     return base.map((_, index) => {
-      const point: { step: number;[key: string]: number } = { step: index }
+      const timeVal = N > 1 
+        ? startTime + (index * (endTime - startTime)) / (N - 1)
+        : startTime
+
+      const point: { step: number; timeVal: number; [key: string]: number } = { 
+        step: index,
+        timeVal: Number(timeVal.toFixed(4)) 
+      }
       for (const varName of selectedVariables) {
         const series = result.time_series[varName] || []
         point[varName] = series[index]
@@ -235,14 +251,16 @@ export const SimulationResults = ({ result }: SimulationResultsProps) => {
                 >
                   <CartesianGrid strokeDasharray="3 3" stroke="var(--color-primary-200)" />
                   <XAxis
-                    dataKey="step"
+                    dataKey="timeVal"
+                    type="number"
+                    domain={['dataMin', 'dataMax']}
                     interval="preserveStartEnd"
                     minTickGap={28}
                     tick={{ fontSize: 11, fill: 'var(--color-primary-700)' }}
                     axisLine={{ stroke: 'var(--color-primary-300)' }}
                     tickLine={{ stroke: 'var(--color-primary-300)' }}
                     label={{
-                      value: 'Simulation step',
+                      value: 'Simulation time',
                       position: 'insideBottom',
                       offset: -2,
                       fill: 'var(--color-primary-700)',
@@ -264,7 +282,8 @@ export const SimulationResults = ({ result }: SimulationResultsProps) => {
                   />
                   <Tooltip
                     formatter={(value: number, name: string) => [formatChartValue(value), name]}
-                    labelFormatter={(label: number) => `Step ${label}`}
+                    labelFormatter={(label: number) => `Time: ${label}`}
+                    useTranslate3d={true}
                     contentStyle={{
                       borderRadius: 8,
                       border: '1px solid var(--color-primary-300)',
@@ -286,11 +305,12 @@ export const SimulationResults = ({ result }: SimulationResultsProps) => {
                         strokeOpacity={focusedVariable && focusedVariable !== varName ? 0.4 : 1}
                         dot={false}
                         activeDot={{
-                          r: 4,
+                          r: 3,
                           onClick: () => setFocusedVariable(varName),
                           cursor: 'pointer',
                           style: { outline: 'none' },
                         }}
+                        isAnimationActive={false}
                         className="pointer-events-auto cursor-pointer transition-opacity duration-300"
                         style={{ cursor: 'pointer', outline: 'none' }}
                         onClick={() => setFocusedVariable(varName)}
