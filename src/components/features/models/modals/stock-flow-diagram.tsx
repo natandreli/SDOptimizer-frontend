@@ -5,7 +5,6 @@ import type { DiagramNode, DiagramEdge } from './stock-flow-diagram.types'
 import { buildGraphData, normalizeId } from '@/utils/graph-builder'
 import { computeLayout } from '@/utils/graph-layout'
 
-// ─── Geometric & Math Helpers ──────────────────────────────────────────────────
 
 interface Point {
   x: number
@@ -42,7 +41,6 @@ function getNodeBoundaryIntersection(
       y: y2 - dy * t,
     }
   } else if (node.kind === 'flow') {
-    // Flow valve represented as a circle
     const r = 12 + padding
     const dist = Math.sqrt(dx * dx + dy * dy)
     return {
@@ -50,7 +48,6 @@ function getNodeBoundaryIntersection(
       y: y2 - (dy / dist) * r,
     }
   } else {
-    // Rectangle intersection (stock, parameter)
     const halfW = w / 2 + padding
     const halfH = h / 2 + padding
 
@@ -65,7 +62,6 @@ function getNodeBoundaryIntersection(
   }
 }
 
-// ─── Cloud Icon ───────────────────────────────────────────────────────────────
 
 function CloudIcon({ x, y }: { x: number; y: number }) {
   return (
@@ -87,7 +83,6 @@ function CloudIcon({ x, y }: { x: number; y: number }) {
   )
 }
 
-// ─── Influence Edge Renderer ──────────────────────────────────────────────────
 
 interface InfluenceEdgeRendererProps {
   edge: DiagramEdge
@@ -187,8 +182,6 @@ function InfluenceEdgeRenderer({
     </g>
   )
 }
-
-// ─── Flow Pipe Renderer ───────────────────────────────────────────────────────
 
 interface FlowPipeRendererProps {
   flowNode: DiagramNode
@@ -340,7 +333,6 @@ function FlowPipeRenderer({
   )
 }
 
-// ─── Flow Valve Renderer ──────────────────────────────────────────────────────
 
 interface FlowValveRendererProps {
   node: DiagramNode
@@ -462,7 +454,6 @@ function FlowValveRenderer({
   )
 }
 
-// ─── Node Renderer ────────────────────────────────────────────────────────────
 
 interface NodeRendererProps {
   node: DiagramNode
@@ -576,7 +567,6 @@ function NodeRenderer({
 
     return (
       <g {...handlers} className={className} style={{ opacity, transition: 'opacity 0.2s ease' }}>
-        {/* Invisible hotspot for mouse capture */}
         <rect
           x={left}
           y={top}
@@ -649,7 +639,6 @@ function NodeRenderer({
   )
 }
 
-// ─── Tooltip Overlay ──────────────────────────────────────────────────────────
 
 interface TooltipOverlayProps {
   nodeId: string
@@ -678,7 +667,6 @@ function TooltipOverlay({ nodeId, nodes, model }: TooltipOverlayProps) {
   const boxWidth = 220
   const boxHeight = lines.length * lineHeight + padding * 2
 
-  // Intelligently position the tooltip to prevent overflowing screen boundaries
   const showOnLeft = node.x > 450
   const tooltipX = showOnLeft ? node.x - node.width / 2 - boxWidth - 10 : node.x + node.width / 2 + 10
   const tooltipY = node.y - boxHeight / 2
@@ -713,7 +701,6 @@ function TooltipOverlay({ nodeId, nodes, model }: TooltipOverlayProps) {
   )
 }
 
-// ─── StockFlowDiagram ─────────────────────────────────────────────────────────
 
 interface StockFlowDiagramProps {
   model: ModelSchema
@@ -812,7 +799,6 @@ export function StockFlowDiagram({
     }
   }
 
-  // Initialize and reset nodes when graph structure or model changes (or when loading from storage)
   useEffect(() => {
     if (graphData.nodes.length > 0) {
       const defaultNodes = computeLayout(graphData.nodes, graphData.edges)
@@ -857,9 +843,7 @@ export function StockFlowDiagram({
     }
   }, [graphData, model.file_name])
 
-  // ── Pan handlers ────────────────────────────────────────────────────────────
   const handleMouseDown = (e: React.MouseEvent<SVGSVGElement>) => {
-    // If edit mode is active and we clicked on a node or edge handle, dragging is handled separately
     if (draggingNodeId || draggingEdgeId) return
     dragRef.current = { active: true, startX: e.clientX, startY: e.clientY, panX: pan.x, panY: pan.y }
   }
@@ -907,7 +891,6 @@ export function StockFlowDiagram({
     setDraggingEdgeId(null)
   }
 
-  // ── Node drag handler ───────────────────────────────────────────────────────
   const handleNodeMouseDown = (e: React.MouseEvent, nodeId: string) => {
     if (!isEditMode) return
     e.stopPropagation()
@@ -921,7 +904,6 @@ export function StockFlowDiagram({
     }
   }
 
-  // ── Edge drag handler ───────────────────────────────────────────────────────
   const handleEdgeMouseDown = (e: React.MouseEvent, edgeId: string, cx: number, cy: number) => {
     if (!isEditMode) return
     e.stopPropagation()
@@ -933,7 +915,6 @@ export function StockFlowDiagram({
     }
   }
 
-  // ── Zoom handler ────────────────────────────────────────────────────────────
   const handleWheel = (e: React.WheelEvent<SVGSVGElement>) => {
     e.preventDefault()
     setZoom((z) => Math.min(3, Math.max(0.3, z - e.deltaY * 0.001)))
@@ -958,15 +939,14 @@ export function StockFlowDiagram({
     )
   }
 
-  // Filter edges and nodes for custom layering
   const influenceEdges = graphData.edges.filter((e) => e.kind === 'influence')
   const flowNodes = nodes.filter((n) => n.kind === 'flow')
 
   const svgCursorClass = (draggingNodeId || draggingEdgeId)
     ? 'cursor-grabbing'
     : isEditMode
-    ? 'cursor-default'
-    : 'cursor-grab active:cursor-grabbing'
+      ? 'cursor-default'
+      : 'cursor-grab active:cursor-grabbing'
 
   return (
     <div className="relative">
@@ -1004,11 +984,10 @@ export function StockFlowDiagram({
               setIsEditMode(!isEditMode)
               setHoveredNodeId(null)
             }}
-            className={`flex items-center gap-1.5 rounded-lg border px-3 py-1.5 text-xs font-semibold shadow-sm transition-all focus:outline-none focus:ring-2 ${
-              isEditMode
-                ? 'border-amber-600 bg-amber-500 text-white hover:bg-amber-600 focus:ring-amber-500'
-                : 'border-primary-200 bg-white text-primary-700 hover:bg-primary-50 focus:ring-primary-500'
-            }`}
+            className={`flex items-center gap-1.5 rounded-lg border px-3 py-1.5 text-xs font-semibold shadow-sm transition-all focus:outline-none focus:ring-2 ${isEditMode
+              ? 'border-amber-600 bg-amber-500 text-white hover:bg-amber-600 focus:ring-amber-500'
+              : 'border-primary-200 bg-white text-primary-700 hover:bg-primary-50 focus:ring-primary-500'
+              }`}
           >
             {isEditMode ? (
               <>
@@ -1099,7 +1078,7 @@ export function StockFlowDiagram({
             />
           )}
 
-          {/* Layer 1: Causal Influence lines (at the back) */}
+          {/* Causal Influence lines (at the back) */}
           {influenceEdges.map((edge) => (
             <InfluenceEdgeRenderer
               key={edge.id}
@@ -1114,7 +1093,7 @@ export function StockFlowDiagram({
             />
           ))}
 
-          {/* Layer 2: Flow pipes and clouds */}
+          {/* Flow pipes and clouds */}
           {flowNodes.map((flowNode) => (
             <FlowPipeRenderer
               key={flowNode.id}
@@ -1127,7 +1106,7 @@ export function StockFlowDiagram({
             />
           ))}
 
-          {/* Layer 3: Stocks, Auxiliaries, and Parameters */}
+          {/* Stocks, Auxiliaries, and Parameters */}
           {nodes.map((node) => (
             <NodeRenderer
               key={node.id}
@@ -1144,7 +1123,7 @@ export function StockFlowDiagram({
             />
           ))}
 
-          {/* Layer 4: Flow valves and labels */}
+          {/* Flow valves and labels */}
           {flowNodes.map((flowNode) => (
             <FlowValveRenderer
               key={flowNode.id}
@@ -1160,7 +1139,7 @@ export function StockFlowDiagram({
             />
           ))}
 
-          {/* Layer 5: Tooltip overlay (drawn relative to hovered node inside SVG space) */}
+          {/* Tooltip overlay */}
           {hoveredNodeId && (
             <TooltipOverlay
               nodeId={hoveredNodeId}
