@@ -1,4 +1,5 @@
-import { useMemo, useState, useRef } from 'react'
+import { useMemo, useState, useRef, useEffect } from 'react'
+import { IconArrowsMove, IconCheck, IconRefresh } from '@tabler/icons-react'
 import type { ModelSchema, ModelVariable } from '@/services/api/models/types'
 import type { DiagramNode, DiagramEdge } from './stock-flow-diagram.types'
 import { buildGraphData } from '@/utils/graph-builder'
@@ -261,6 +262,8 @@ interface FlowValveRendererProps {
   node: DiagramNode
   edges: DiagramEdge[]
   nodes: DiagramNode[]
+  isEditMode: boolean
+  onMouseDown: (e: React.MouseEvent) => void
   onMouseEnter: (nodeId: string) => void
   onMouseLeave: () => void
 }
@@ -269,13 +272,16 @@ function FlowValveRenderer({
   node,
   edges,
   nodes,
+  isEditMode,
+  onMouseDown,
   onMouseEnter,
   onMouseLeave,
 }: FlowValveRendererProps) {
   const { x, y, label } = node
   const handlers = {
-    onMouseEnter: () => onMouseEnter(node.id),
-    onMouseLeave,
+    onMouseDown,
+    onMouseEnter: () => !isEditMode && onMouseEnter(node.id),
+    onMouseLeave: () => !isEditMode && onMouseLeave(),
   }
 
   const sourceStockEdge = edges.find((e) => e.kind === 'flow-pipe' && e.target === node.id)
@@ -305,10 +311,24 @@ function FlowValveRenderer({
   const angle = Math.atan2(uy, ux)
   const deg = (angle * 180) / Math.PI
 
+  const className = `cursor-pointer ${isEditMode ? 'cursor-move select-none' : ''}`
+
   return (
-    <g {...handlers} className="cursor-pointer">
+    <g {...handlers} className={className}>
       {/* Invisible hover hotspot */}
       <circle cx={x} cy={y} r={18} fill="transparent" />
+
+      {isEditMode && (
+        <circle
+          cx={x}
+          cy={y}
+          r={16}
+          fill="none"
+          stroke="#7c3aed"
+          strokeWidth={1}
+          strokeDasharray="2 2"
+        />
+      )}
 
       {/* Butterfly Valve Symbol (rotated) */}
       <g transform={`translate(${x}, ${y}) rotate(${deg})`}>
@@ -353,11 +373,19 @@ function FlowValveRenderer({
 
 interface NodeRendererProps {
   node: DiagramNode
+  isEditMode: boolean
+  onMouseDown: (e: React.MouseEvent) => void
   onMouseEnter: (nodeId: string) => void
   onMouseLeave: () => void
 }
 
-function NodeRenderer({ node, onMouseEnter, onMouseLeave }: NodeRendererProps) {
+function NodeRenderer({
+  node,
+  isEditMode,
+  onMouseDown,
+  onMouseEnter,
+  onMouseLeave,
+}: NodeRendererProps) {
   const { x, y, width, height, kind, label } = node
   if (kind === 'flow') return null // rendered separately by FlowValveRenderer
 
@@ -365,9 +393,12 @@ function NodeRenderer({ node, onMouseEnter, onMouseLeave }: NodeRendererProps) {
   const top = y - height / 2
 
   const handlers = {
-    onMouseEnter: () => onMouseEnter(node.id),
-    onMouseLeave,
+    onMouseDown,
+    onMouseEnter: () => !isEditMode && onMouseEnter(node.id),
+    onMouseLeave: () => !isEditMode && onMouseLeave(),
   }
+
+  const className = `cursor-pointer ${isEditMode ? 'cursor-move select-none' : ''}`
 
   const labelEl = (
     <text
@@ -386,7 +417,7 @@ function NodeRenderer({ node, onMouseEnter, onMouseLeave }: NodeRendererProps) {
 
   if (kind === 'stock') {
     return (
-      <g {...handlers} className="cursor-pointer">
+      <g {...handlers} className={className}>
         <rect
           x={left}
           y={top}
@@ -396,6 +427,7 @@ function NodeRenderer({ node, onMouseEnter, onMouseLeave }: NodeRendererProps) {
           fill="#e0f2fe"
           stroke="#0284c7"
           strokeWidth={2}
+          strokeDasharray={isEditMode ? '4 2' : undefined}
         />
         {labelEl}
       </g>
@@ -404,7 +436,7 @@ function NodeRenderer({ node, onMouseEnter, onMouseLeave }: NodeRendererProps) {
 
   if (kind === 'auxiliary') {
     return (
-      <g {...handlers} className="cursor-pointer">
+      <g {...handlers} className={className}>
         <ellipse
           cx={x}
           cy={y}
@@ -413,6 +445,7 @@ function NodeRenderer({ node, onMouseEnter, onMouseLeave }: NodeRendererProps) {
           fill="#fef3c7"
           stroke="#d97706"
           strokeWidth={2}
+          strokeDasharray={isEditMode ? '4 2' : undefined}
         />
         {labelEl}
       </g>
@@ -421,7 +454,27 @@ function NodeRenderer({ node, onMouseEnter, onMouseLeave }: NodeRendererProps) {
 
   if (kind === 'shadow') {
     return (
-      <g {...handlers} className="cursor-pointer">
+      <g {...handlers} className={className}>
+        {/* Invisible hotspot for mouse capture */}
+        <rect
+          x={left}
+          y={top}
+          width={width}
+          height={height}
+          fill="transparent"
+        />
+        {isEditMode && (
+          <rect
+            x={left}
+            y={top}
+            width={width}
+            height={height}
+            fill="none"
+            stroke="#94a3b8"
+            strokeWidth={1}
+            strokeDasharray="2 2"
+          />
+        )}
         <text
           x={x}
           y={y}
@@ -440,7 +493,7 @@ function NodeRenderer({ node, onMouseEnter, onMouseLeave }: NodeRendererProps) {
 
   // parameter
   return (
-    <g {...handlers} className="cursor-pointer">
+    <g {...handlers} className={className}>
       <rect
         x={left}
         y={top}
@@ -450,7 +503,7 @@ function NodeRenderer({ node, onMouseEnter, onMouseLeave }: NodeRendererProps) {
         fill="#f8fafc"
         stroke="#94a3b8"
         strokeWidth={1.5}
-        strokeDasharray="4 2"
+        strokeDasharray={isEditMode ? '2 2' : '4 2'}
       />
       {labelEl}
     </g>
@@ -529,10 +582,9 @@ interface StockFlowDiagramProps {
 
 export function StockFlowDiagram({ model }: StockFlowDiagramProps) {
   const graphData = useMemo(() => buildGraphData(model), [model])
-  const laidOut = useMemo(
-    () => ({ ...graphData, nodes: computeLayout(graphData.nodes, graphData.edges) }),
-    [graphData],
-  )
+  const [nodes, setNodes] = useState<DiagramNode[]>([])
+  const [isEditMode, setIsEditMode] = useState(false)
+  const [draggingNodeId, setDraggingNodeId] = useState<string | null>(null)
 
   const [pan, setPan] = useState({ x: 0, y: 0 })
   const [zoom, setZoom] = useState(1)
@@ -546,18 +598,57 @@ export function StockFlowDiagram({ model }: StockFlowDiagramProps) {
     panY: 0,
   })
 
+  const dragOffsetRef = useRef({ x: 0, y: 0 })
+
+  // Initialize and reset nodes when graph structure or model changes
+  useEffect(() => {
+    if (graphData.nodes.length > 0) {
+      setNodes(computeLayout(graphData.nodes, graphData.edges))
+    } else {
+      setNodes([])
+    }
+  }, [graphData])
+
   // ── Pan handlers ────────────────────────────────────────────────────────────
   const handleMouseDown = (e: React.MouseEvent<SVGSVGElement>) => {
+    // If edit mode is active and we clicked on a node, dragging is handled by node handlers
+    if (draggingNodeId) return
     dragRef.current = { active: true, startX: e.clientX, startY: e.clientY, panX: pan.x, panY: pan.y }
   }
 
   const handleMouseMove = (e: React.MouseEvent<SVGSVGElement>) => {
-    const d = dragRef.current
-    if (!d.active) return
-    setPan({ x: d.panX + (e.clientX - d.startX), y: d.panY + (e.clientY - d.startY) })
+    if (draggingNodeId) {
+      e.preventDefault()
+      const newX = (e.clientX - dragOffsetRef.current.x) / zoom
+      const newY = (e.clientY - dragOffsetRef.current.y) / zoom
+      setNodes((prev) =>
+        prev.map((n) => (n.id === draggingNodeId ? { ...n, x: newX, y: newY } : n))
+      )
+    } else {
+      const d = dragRef.current
+      if (!d.active) return
+      setPan({ x: d.panX + (e.clientX - d.startX), y: d.panY + (e.clientY - d.startY) })
+    }
   }
 
-  const stopDrag = () => { dragRef.current.active = false }
+  const stopDrag = () => {
+    dragRef.current.active = false
+    setDraggingNodeId(null)
+  }
+
+  // ── Node drag handler ───────────────────────────────────────────────────────
+  const handleNodeMouseDown = (e: React.MouseEvent, nodeId: string) => {
+    if (!isEditMode) return
+    e.stopPropagation()
+    e.preventDefault()
+    setDraggingNodeId(nodeId)
+    const node = nodes.find((n) => n.id === nodeId)
+    if (!node) return
+    dragOffsetRef.current = {
+      x: e.clientX - node.x * zoom,
+      y: e.clientY - node.y * zoom,
+    }
+  }
 
   // ── Zoom handler ────────────────────────────────────────────────────────────
   const handleWheel = (e: React.WheelEvent<SVGSVGElement>) => {
@@ -568,7 +659,7 @@ export function StockFlowDiagram({ model }: StockFlowDiagramProps) {
   const handleNodeEnter = (nodeId: string) => setHoveredNodeId(nodeId)
   const handleNodeLeave = () => setHoveredNodeId(null)
 
-  if (laidOut.nodes.length === 0) {
+  if (graphData.nodes.length === 0) {
     return (
       <div className="flex h-64 items-center justify-center text-sm text-primary-500">
         No variables to display.
@@ -576,82 +667,160 @@ export function StockFlowDiagram({ model }: StockFlowDiagramProps) {
     )
   }
 
-  // Filter edges for custom layering
-  const influenceEdges = laidOut.edges.filter((e) => e.kind === 'influence')
-  const flowNodes = laidOut.nodes.filter((n) => n.kind === 'flow')
+  if (graphData.nodes.length > 0 && nodes.length === 0) {
+    return (
+      <div className="flex h-64 items-center justify-center text-sm text-primary-500">
+        Cargando diagrama...
+      </div>
+    )
+  }
+
+  // Filter edges and nodes for custom layering
+  const influenceEdges = graphData.edges.filter((e) => e.kind === 'influence')
+  const flowNodes = nodes.filter((n) => n.kind === 'flow')
+
+  const svgCursorClass = draggingNodeId
+    ? 'cursor-grabbing'
+    : isEditMode
+    ? 'cursor-default'
+    : 'cursor-grab active:cursor-grabbing'
 
   return (
-    <svg
-      viewBox="0 0 900 500"
-      className="w-full rounded-lg border border-primary-200 bg-primary-50 cursor-grab active:cursor-grabbing"
-      style={{ touchAction: 'none' }}
-      onMouseDown={handleMouseDown}
-      onMouseMove={handleMouseMove}
-      onMouseUp={stopDrag}
-      onMouseLeave={stopDrag}
-      onWheel={handleWheel}
-    >
-      <defs>
-        <marker
-          id="arrow"
-          markerWidth="8"
-          markerHeight="8"
-          refX="6"
-          refY="3"
-          orient="auto"
-        >
-          <path d="M0,0 L0,6 L8,3 z" fill="#38bdf8" />
-        </marker>
-      </defs>
-
-      {/* Pan/zoom wrapper */}
-      <g transform={`translate(${pan.x},${pan.y}) scale(${zoom})`}>
-        {/* Layer 1: Causal Influence lines (at the back) */}
-        {influenceEdges.map((edge) => (
-          <InfluenceEdgeRenderer key={edge.id} edge={edge} nodes={laidOut.nodes} />
-        ))}
-
-        {/* Layer 2: Flow pipes and clouds */}
-        {flowNodes.map((flowNode) => (
-          <FlowPipeRenderer
-            key={flowNode.id}
-            flowNode={flowNode}
-            nodes={laidOut.nodes}
-            edges={laidOut.edges}
-          />
-        ))}
-
-        {/* Layer 3: Stocks, Auxiliaries, and Parameters */}
-        {laidOut.nodes.map((node) => (
-          <NodeRenderer
-            key={node.id}
-            node={node}
-            onMouseEnter={handleNodeEnter}
-            onMouseLeave={handleNodeLeave}
-          />
-        ))}
-
-        {/* Layer 4: Flow valves and labels */}
-        {flowNodes.map((flowNode) => (
-          <FlowValveRenderer
-            key={flowNode.id}
-            node={flowNode}
-            edges={laidOut.edges}
-            nodes={laidOut.nodes}
-            onMouseEnter={handleNodeEnter}
-            onMouseLeave={handleNodeLeave}
-          />
-        ))}
-
-        {/* Layer 5: Tooltip overlay (drawn relative to hovered node inside SVG space) */}
-        {hoveredNodeId && (
-          <TooltipOverlay
-            nodeId={hoveredNodeId}
-            nodes={laidOut.nodes}
-            model={model}
-          />
+    <div className="relative">
+      {/* Controls Overlay */}
+      <div className="absolute right-3 top-3 z-10 flex gap-2">
+        {isEditMode && (
+          <button
+            type="button"
+            onClick={() => {
+              if (graphData.nodes.length > 0) {
+                setNodes(computeLayout(graphData.nodes, graphData.edges))
+              }
+            }}
+            className="flex items-center gap-1 rounded-lg border border-primary-200 bg-white px-2.5 py-1.5 text-xs font-semibold text-primary-700 shadow-sm transition-all hover:bg-primary-50 focus:outline-none focus:ring-2 focus:ring-primary-500"
+            title="Restaurar distribución automática"
+          >
+            <IconRefresh className="h-3.5 w-3.5" />
+            Reiniciar
+          </button>
         )}
-      </g>
-    </svg>
+        <button
+          type="button"
+          onClick={() => {
+            setIsEditMode(!isEditMode)
+            setHoveredNodeId(null)
+          }}
+          className={`flex items-center gap-1.5 rounded-lg border px-3 py-1.5 text-xs font-semibold shadow-sm transition-all focus:outline-none focus:ring-2 ${
+            isEditMode
+              ? 'border-amber-600 bg-amber-500 text-white hover:bg-amber-600 focus:ring-amber-500'
+              : 'border-primary-200 bg-white text-primary-700 hover:bg-primary-50 focus:ring-primary-500'
+          }`}
+        >
+          {isEditMode ? (
+            <>
+              <IconCheck className="h-3.5 w-3.5" />
+              Guardar Distribución
+            </>
+          ) : (
+            <>
+              <IconArrowsMove className="h-3.5 w-3.5" />
+              Editar Distribución
+            </>
+          )}
+        </button>
+      </div>
+
+      <svg
+        viewBox="0 0 900 500"
+        className={`w-full rounded-lg border border-primary-200 bg-primary-50 transition-colors duration-200 ${svgCursorClass}`}
+        style={{ touchAction: 'none' }}
+        onMouseDown={handleMouseDown}
+        onMouseMove={handleMouseMove}
+        onMouseUp={stopDrag}
+        onMouseLeave={stopDrag}
+        onWheel={handleWheel}
+      >
+        <defs>
+          <marker
+            id="arrow"
+            markerWidth="8"
+            markerHeight="8"
+            refX="6"
+            refY="3"
+            orient="auto"
+          >
+            <path d="M0,0 L0,6 L8,3 z" fill="#38bdf8" />
+          </marker>
+          <pattern id="grid" width="20" height="20" patternUnits="userSpaceOnUse">
+            <path d="M 20 0 L 0 0 0 20" fill="none" stroke="#e2e8f0" strokeWidth="0.5" />
+          </pattern>
+        </defs>
+
+        {/* Pan/zoom wrapper */}
+        <g transform={`translate(${pan.x},${pan.y}) scale(${zoom})`}>
+          {/* Subtle design grid pattern in edit mode */}
+          {isEditMode && (
+            <rect
+              x={-5000}
+              y={-5000}
+              width={10000}
+              height={10000}
+              fill="url(#grid)"
+              className="pointer-events-none opacity-50"
+            />
+          )}
+
+          {/* Layer 1: Causal Influence lines (at the back) */}
+          {influenceEdges.map((edge) => (
+            <InfluenceEdgeRenderer key={edge.id} edge={edge} nodes={nodes} />
+          ))}
+
+          {/* Layer 2: Flow pipes and clouds */}
+          {flowNodes.map((flowNode) => (
+            <FlowPipeRenderer
+              key={flowNode.id}
+              flowNode={flowNode}
+              nodes={nodes}
+              edges={graphData.edges}
+            />
+          ))}
+
+          {/* Layer 3: Stocks, Auxiliaries, and Parameters */}
+          {nodes.map((node) => (
+            <NodeRenderer
+              key={node.id}
+              node={node}
+              isEditMode={isEditMode}
+              onMouseDown={(e) => handleNodeMouseDown(e, node.id)}
+              onMouseEnter={handleNodeEnter}
+              onMouseLeave={handleNodeLeave}
+            />
+          ))}
+
+          {/* Layer 4: Flow valves and labels */}
+          {flowNodes.map((flowNode) => (
+            <FlowValveRenderer
+              key={flowNode.id}
+              node={flowNode}
+              edges={graphData.edges}
+              nodes={nodes}
+              isEditMode={isEditMode}
+              onMouseDown={(e) => handleNodeMouseDown(e, flowNode.id)}
+              onMouseEnter={handleNodeEnter}
+              onMouseLeave={handleNodeLeave}
+            />
+          ))}
+
+          {/* Layer 5: Tooltip overlay (drawn relative to hovered node inside SVG space) */}
+          {hoveredNodeId && (
+            <TooltipOverlay
+              nodeId={hoveredNodeId}
+              nodes={nodes}
+              model={model}
+            />
+          )}
+        </g>
+      </svg>
+    </div>
   )
 }
