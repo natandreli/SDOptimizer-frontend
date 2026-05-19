@@ -1,5 +1,7 @@
+import { useState } from 'react'
 import { IconInfoCircle, IconInfoSmall } from '@tabler/icons-react'
 import type { ModelSchema } from '@/services/api/models/types'
+import { StockFlowDiagram } from './stock-flow-diagram'
 
 type ModelDetailsModalProps = {
   modelId: string
@@ -96,6 +98,8 @@ const renderHighlightedJson = (json: string) => {
 }
 
 export const ModelDetailsModal = ({ modelId, model }: ModelDetailsModalProps) => {
+  const [activeTab, setActiveTab] = useState<'json' | 'diagram'>('json')
+
   const sections = [
     {
       key: 'stocks',
@@ -188,9 +192,38 @@ export const ModelDetailsModal = ({ modelId, model }: ModelDetailsModalProps) =>
         ))}
       </div>
 
-      <pre className="border-primary-200 bg-primary-50 text-primary-900 max-h-[52vh] overflow-auto rounded-lg border p-3 text-xs whitespace-pre">
-        {highlightedJson}
-      </pre>
+      <div className="flex gap-1 border-b border-primary-200">
+        <button
+          type="button"
+          onClick={() => setActiveTab('json')}
+          className={`px-4 py-1.5 text-sm font-medium rounded-t transition-colors ${
+            activeTab === 'json'
+              ? 'bg-primary-100 text-primary-950 border border-b-0 border-primary-200'
+              : 'text-primary-600 hover:text-primary-900 hover:bg-primary-50'
+          }`}
+        >
+          JSON
+        </button>
+        <button
+          type="button"
+          onClick={() => setActiveTab('diagram')}
+          className={`px-4 py-1.5 text-sm font-medium rounded-t transition-colors ${
+            activeTab === 'diagram'
+              ? 'bg-primary-100 text-primary-950 border border-b-0 border-primary-200'
+              : 'text-primary-600 hover:text-primary-900 hover:bg-primary-50'
+          }`}
+        >
+          Diagram
+        </button>
+      </div>
+
+      {activeTab === 'json' && (
+        <pre className="border-primary-200 bg-primary-50 text-primary-900 max-h-[52vh] overflow-auto rounded-lg border p-3 text-xs whitespace-pre">
+          {highlightedJson}
+        </pre>
+      )}
+
+      {activeTab === 'diagram' && <StockFlowDiagram model={model} />}
     </div>
   )
 }
