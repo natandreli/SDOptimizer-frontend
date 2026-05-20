@@ -17,10 +17,10 @@ type SimulationSetupFormProps = {
   modelOptions: ModelOption[]
   selectedModelId: string
   onSelectedModelIdChange: (value: string) => void
-  dt: string
-  onDtChange: (value: string) => void
-  totalTime: string
-  onTotalTimeChange: (value: string) => void
+  dt: string | undefined
+  onDtChange: (value: string | undefined) => void
+  totalTime: string | undefined
+  onTotalTimeChange: (value: string | undefined) => void
   parameterOverrides: Record<string, string>
   onParameterOverridesChange: (value: Record<string, string>) => void
   simulationOptions?: SimulationOptions
@@ -108,7 +108,7 @@ export const SimulationSetupForm = ({
                         type="number"
                         min={0.0001}
                         step={1}
-                        value={totalTime}
+                        value={totalTime ?? (simulationOptions ? String(simulationOptions.defaults.total_time) : '')}
                         setValue={onTotalTimeChange}
                         placeholder={simulationOptions ? String(simulationOptions.defaults.total_time) : ''}
                         required
@@ -126,7 +126,7 @@ export const SimulationSetupForm = ({
                       type="number"
                       min={0.0001}
                       step={0.01}
-                      value={dt}
+                      value={dt ?? (simulationOptions ? String(simulationOptions.defaults.dt) : '')}
                       setValue={onDtChange}
                       placeholder={simulationOptions ? String(simulationOptions.defaults.dt) : ''}
                       required
@@ -181,17 +181,15 @@ export const SimulationSetupForm = ({
                     return (
                       <div
                         key={parameter.name}
-                        className={`transition-all duration-150 shrink-0 snap-start rounded-lg border p-3 ${
-                          isParamActive
-                            ? 'border-amber-400 bg-amber-500/10 shadow-sm'
-                            : 'border-primary-200/70 bg-primary-100/30'
-                        }`}
+                        className={`transition-all duration-150 shrink-0 snap-start rounded-lg border p-3 ${isParamActive
+                          ? 'border-amber-400 bg-amber-500/10 shadow-sm'
+                          : 'border-primary-200/70 bg-primary-100/30'
+                          }`}
                         onMouseEnter={() => onActiveParamChange?.(parameter.name)}
                         onMouseLeave={() => onActiveParamChange?.(null)}
                       >
-                        <p className={`mb-2 text-xs font-semibold transition-colors duration-150 ${
-                          isParamActive ? 'text-amber-900' : 'text-primary-900'
-                        }`}>
+                        <p className={`mb-2 text-xs font-semibold transition-colors duration-150 ${isParamActive ? 'text-amber-900' : 'text-primary-900'
+                          }`}>
                           {parameter.name}
                         </p>
                         <Input

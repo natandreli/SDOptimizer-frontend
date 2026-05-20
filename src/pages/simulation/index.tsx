@@ -13,8 +13,8 @@ import { StockFlowDiagram } from '@/components/features/models/modals/stock-flow
 export const SimulationPage = () => {
   const toast = useToast()
   const [selectedModelId, setSelectedModelId] = useState('')
-  const [dt, setDt] = useState('')
-  const [totalTime, setTotalTime] = useState('')
+  const [dt, setDt] = useState<string | undefined>(undefined)
+  const [totalTime, setTotalTime] = useState<string | undefined>(undefined)
   const [parameterOverrides, setParameterOverrides] = useState<Record<string, string>>({})
   const [simulationProgress, setSimulationProgress] = useState(0)
   const [result, setResult] = useState<SimulationResult | null>(null)
@@ -39,9 +39,9 @@ export const SimulationPage = () => {
 
   const simulationOptions = optionsResponse?.options
 
-  const effectiveDt = dt || (simulationOptions ? String(simulationOptions.defaults.dt) : '')
+  const effectiveDt = dt ?? (simulationOptions ? String(simulationOptions.defaults.dt) : '')
   const effectiveTotalTime =
-    totalTime || (simulationOptions ? String(simulationOptions.defaults.total_time) : '')
+    totalTime ?? (simulationOptions ? String(simulationOptions.defaults.total_time) : '')
 
   const modelOptions = useMemo(
     () =>
@@ -189,8 +189,8 @@ export const SimulationPage = () => {
             onSelectedModelIdChange={(value) => {
               setSelectedModelId(value)
               setResult(null)
-              setDt('')
-              setTotalTime('')
+              setDt(undefined)
+              setTotalTime(undefined)
               setParameterOverrides({})
               setActiveTab('diagram')
               setActiveParam(null)
