@@ -197,7 +197,7 @@ export const SimulationSetupForm = ({
                         onMouseEnter={() => onActiveParamChange?.(parameter.name)}
                         onMouseLeave={() => onActiveParamChange?.(null)}
                       >
-                        <p className={`mb-2 text-xs font-semibold transition-colors duration-150 ${isParamActive ? 'text-amber-900' : 'text-primary-900'
+                        <p className={`mb-2 text-xs font-semibold break-words transition-colors duration-150 ${isParamActive ? 'text-amber-900' : 'text-primary-900'
                           }`}>
                           {parameter.name}
                         </p>

@@ -39,13 +39,13 @@ const VariableChip = ({
   return (
     <div
       onClick={onClick}
-      className={`inline-flex cursor-pointer items-center gap-1.5 rounded-full px-2.5 py-1 text-xs font-medium transition-colors ${isFocused
+      className={`inline-flex max-w-full cursor-pointer items-center gap-1.5 rounded-full px-2.5 py-1 text-xs font-medium transition-colors ${isFocused
         ? 'bg-primary-900 ring-primary-900/20 ring-offset-primary-50 text-white shadow-sm ring-2 ring-offset-2'
         : 'bg-primary-100 text-primary-900 hover:bg-primary-200'
         }`}
     >
-      <div className="h-2 w-2 rounded-full" style={{ backgroundColor: color }} />
-      {varName}
+      <div className="shrink-0 h-2 w-2 rounded-full" style={{ backgroundColor: color }} />
+      <span className="truncate">{varName}</span>
       <button
         type="button"
         onClick={(e) => {
@@ -199,7 +199,7 @@ export const SimulationResults = ({ result }: SimulationResultsProps) => {
 
             {selectedStats && focusedVariable && (
               <div className="mt-4">
-                <p className="text-primary-950 mb-2 px-1 text-sm font-medium">
+                <p className="text-primary-950 mb-2 px-1 text-sm font-medium break-words">
                   Summary for <span className="font-bold">{focusedVariable}</span>
                 </p>
                 <div className="grid grid-cols-2 gap-2">

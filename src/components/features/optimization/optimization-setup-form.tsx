@@ -377,7 +377,7 @@ export const OptimizationSetupForm = ({
                       key={parameter.name}
                       className="border-primary-200/70 bg-primary-100/30 shrink-0 snap-start rounded-lg border p-3"
                     >
-                      <p className="text-primary-900 mb-2 text-xs font-semibold">{parameter.name}</p>
+                      <p className="text-primary-900 mb-2 text-xs font-semibold break-words">{parameter.name}</p>
                       <div className="space-y-2">
                         <div className="flex items-center justify-between gap-2">
                           <span className="text-primary-800/75 w-16 text-[10px] font-bold tracking-wider uppercase">
