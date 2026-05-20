@@ -1,6 +1,7 @@
 import type { FormEvent } from 'react'
 import { AnimatePresence, motion } from 'framer-motion'
-import { IconAdjustments, IconPlayerPlay, IconRefresh, IconSettings, IconInfoCircle } from '@tabler/icons-react'
+import { IconAdjustments, IconPlayerPlay, IconRefresh, IconSettings } from '@tabler/icons-react'
+import { InfoTooltip } from '@/components/ui/tooltip'
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
 import { Select } from '@/components/ui/select'
@@ -104,9 +105,8 @@ export const SimulationSetupForm = ({
                     <div>
                       <p className="text-primary-700 mb-1 flex items-center gap-1 text-[10px] font-semibold tracking-widest uppercase">
                         End Time
-                        <IconInfoCircle
-                          className="text-primary-400 h-3 w-3 cursor-help"
-                          title={`Total simulation duration. Unit: ${simulationOptions?.defaults.time_unit || 'Not defined in model'}`}
+                        <InfoTooltip
+                          content={`Total simulation duration. Unit: ${simulationOptions?.defaults.time_unit || 'Not defined in model'}`}
                         />
                       </p>
                       <Input
@@ -126,9 +126,8 @@ export const SimulationSetupForm = ({
                   <div>
                     <p className="text-primary-700 mb-1 flex items-center gap-1 text-[10px] font-semibold tracking-widest uppercase">
                       Time Step (dt)
-                      <IconInfoCircle
-                        className="text-primary-400 h-3 w-3 cursor-help"
-                        title={`Euler integration time step (dt). Unit: ${simulationOptions?.defaults.time_unit || 'Not defined in model'}`}
+                      <InfoTooltip
+                        content={`Euler integration time step (dt). Unit: ${simulationOptions?.defaults.time_unit || 'Not defined in model'}`}
                       />
                     </p>
                     <Input

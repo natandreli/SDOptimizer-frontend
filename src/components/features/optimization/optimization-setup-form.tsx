@@ -4,8 +4,8 @@ import {
   IconAdjustments,
   IconPlayerPlayFilled,
   IconRefresh,
-  IconInfoCircle,
 } from '@tabler/icons-react'
+import { InfoTooltip } from '@/components/ui/tooltip'
 
 import { Button } from '@/components/ui/button'
 import { Select } from '@/components/ui/select'
@@ -158,10 +158,7 @@ export const OptimizationSetupForm = ({
                   <div className="space-y-1">
                     <span className="text-primary-700 mb-1 flex items-center gap-1 text-[10px] font-semibold tracking-widest uppercase">
                       Target Variable
-                      <IconInfoCircle
-                        className="text-primary-400 h-3 w-3 cursor-help"
-                        title="The main variable to optimize over the simulation."
-                      />
+                      <InfoTooltip content="The main variable to optimize over the simulation." />
                     </span>
                     <Select
                       value={effectiveTargetVariable}
@@ -174,10 +171,7 @@ export const OptimizationSetupForm = ({
                   <div className="space-y-1">
                     <span className="text-primary-700 mb-1 flex items-center gap-1 text-[10px] font-semibold tracking-widest uppercase">
                       Statistic
-                      <IconInfoCircle
-                        className="text-primary-400 h-3 w-3 cursor-help"
-                        title="The statistical measure of the target variable to optimize (e.g. min, max, mean)."
-                      />
+                      <InfoTooltip content="The statistical measure of the target variable to optimize (e.g. min, max, mean)." />
                     </span>
                     <Select
                       value={effectiveStatistic}
@@ -193,10 +187,7 @@ export const OptimizationSetupForm = ({
                   <div className="space-y-1">
                     <span className="text-primary-700 mb-1 flex items-center gap-1 text-[10px] font-semibold tracking-widest uppercase">
                       Direction
-                      <IconInfoCircle
-                        className="text-primary-400 h-3 w-3 cursor-help"
-                        title="Whether to maximize or minimize the target statistic."
-                      />
+                      <InfoTooltip content="Whether to maximize or minimize the target statistic." />
                     </span>
                     <Select
                       value={effectiveDirection}
@@ -208,10 +199,7 @@ export const OptimizationSetupForm = ({
                   <div className="space-y-1">
                     <span className="text-primary-700 mb-1 flex items-center gap-1 text-[10px] font-semibold tracking-widest uppercase">
                       Max Runs
-                      <IconInfoCircle
-                        className="text-primary-400 h-3 w-3 cursor-help"
-                        title="Maximum number of simulation iterations allowed for the optimization algorithm."
-                      />
+                      <InfoTooltip content="Maximum number of simulation iterations allowed for the optimization algorithm." />
                     </span>
                     <Input
                       type="number"
@@ -231,10 +219,7 @@ export const OptimizationSetupForm = ({
                   <div className="space-y-1">
                     <span className="text-primary-700 mb-1 flex items-center gap-1 text-[10px] font-semibold tracking-widest uppercase">
                       Epsilon
-                      <IconInfoCircle
-                        className="text-primary-400 h-3 w-3 cursor-help"
-                        title="Exploration vs exploitation rate (between 0 and 1). Higher means more exploration."
-                      />
+                      <InfoTooltip content="Exploration vs exploitation rate (between 0 and 1). Higher means more exploration." />
                     </span>
                     <Input
                       type="number"
@@ -250,10 +235,7 @@ export const OptimizationSetupForm = ({
                   <div className="space-y-1">
                     <span className="text-primary-700 mb-1 flex items-center gap-1 text-[10px] font-semibold tracking-widest uppercase">
                       Rho Factor
-                      <IconInfoCircle
-                        className="text-primary-400 h-3 w-3 cursor-help"
-                        title="Step size ratio used to scale parameter adjustments dynamically during the search."
-                      />
+                      <InfoTooltip content="Step size ratio used to scale parameter adjustments dynamically during the search." />
                     </span>
                     <Input
                       type="number"
@@ -272,10 +254,7 @@ export const OptimizationSetupForm = ({
                   <div className="space-y-1">
                     <span className="text-primary-700 mb-1 flex items-center gap-1 text-[10px] font-semibold tracking-widest uppercase">
                       Final Time
-                      <IconInfoCircle
-                        className="text-primary-400 h-3 w-3 cursor-help"
-                        title={`Final simulation time. Unit: ${optimizationOptions?.defaults.time_unit || 'Not defined in model'}`}
-                      />
+                      <InfoTooltip content={`Final simulation time. Unit: ${optimizationOptions?.defaults.time_unit || 'Not defined in model'}`} />
                     </span>
                     <Input
                       type="number"
@@ -292,10 +271,7 @@ export const OptimizationSetupForm = ({
                   <div className="space-y-1">
                     <span className="text-primary-700 mb-1 flex items-center gap-1 text-[10px] font-semibold tracking-widest uppercase">
                       Time Step (dt)
-                      <IconInfoCircle
-                        className="text-primary-400 h-3 w-3 cursor-help"
-                        title={`Integration time step (dt). Unit: ${optimizationOptions?.defaults.time_unit || 'Not defined in model'}`}
-                      />
+                      <InfoTooltip content={`Integration time step (dt). Unit: ${optimizationOptions?.defaults.time_unit || 'Not defined in model'}`} />
                     </span>
                     <Input
                       type="number"
