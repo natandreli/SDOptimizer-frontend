@@ -40,6 +40,7 @@ export interface SimulationOptions {
   defaults: {
     dt: number
     total_time: number
+    time_unit: string
   }
 }
 
@@ -102,6 +103,7 @@ export interface OptimizationDefaults {
   direction: 'maximize' | 'minimize'
   dt?: number
   total_time?: number
+  time_unit: string
 }
 
 export interface OptimizationOptions {
@@ -162,6 +164,7 @@ export interface SimulationParameterOption {
 export interface SimulationDefaults {
   dt: number
   total_time: number
+  time_unit: string
 }
 
 export interface SimulationOptions {
