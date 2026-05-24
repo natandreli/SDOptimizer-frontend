@@ -9,7 +9,7 @@ export const AppLayout = () => {
     <div className="relative flex h-[100dvh] flex-col overflow-hidden bg-[var(--color-background)]/80">
       <AnimatedBackground />
       <Header />
-      <main className="relative z-10 container mx-auto flex min-h-0 w-full max-w-7xl flex-1 flex-col px-5 py-6 sm:py-8 lg:px-10">
+      <main className="relative z-10 container mx-auto flex min-h-0 w-full max-w-[1600px] flex-1 flex-col px-5 py-6 sm:py-8 lg:px-10">
         <Outlet />
       </main>
       <Footer />
