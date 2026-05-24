@@ -5,7 +5,6 @@ import type { DiagramNode, DiagramEdge } from './stock-flow-diagram.types'
 import { buildGraphData, normalizeId } from '@/utils/graph-builder'
 import { computeLayout } from '@/utils/graph-layout'
 
-
 interface Point {
   x: number
   y: number
@@ -62,7 +61,6 @@ function getNodeBoundaryIntersection(
   }
 }
 
-
 function CloudIcon({ x, y }: { x: number; y: number }) {
   return (
     <path
@@ -82,7 +80,6 @@ function CloudIcon({ x, y }: { x: number; y: number }) {
     />
   )
 }
-
 
 interface InfluenceEdgeRendererProps {
   edge: DiagramEdge
@@ -278,8 +275,10 @@ function FlowPipeRenderer({
   const pipeEndY = arrowEndPt.y - uy * 13
 
   // Active status calculation
-  const isSourceActive = sourceStockEdge && activeEdgeIds ? activeEdgeIds.has(sourceStockEdge.id) : false
-  const isTargetActive = targetStockEdge && activeEdgeIds ? activeEdgeIds.has(targetStockEdge.id) : false
+  const isSourceActive =
+    sourceStockEdge && activeEdgeIds ? activeEdgeIds.has(sourceStockEdge.id) : false
+  const isTargetActive =
+    targetStockEdge && activeEdgeIds ? activeEdgeIds.has(targetStockEdge.id) : false
   const isActive = isSourceActive || isTargetActive
 
   const outerStroke = isActive ? '#d97706' : '#0284c7'
@@ -319,7 +318,7 @@ function FlowPipeRenderer({
           stroke="#f59e0b"
           strokeWidth={2}
           strokeLinecap="round"
-          className={animateFlows ? "flow-active-pipe-flow-line" : undefined}
+          className={animateFlows ? 'flow-active-pipe-flow-line' : undefined}
         />
       )}
 
@@ -332,7 +331,6 @@ function FlowPipeRenderer({
     </g>
   )
 }
-
 
 interface FlowValveRendererProps {
   node: DiagramNode
@@ -375,17 +373,26 @@ function FlowValveRenderer({
     const dx = targetStock.x - sourceStock.x
     const dy = targetStock.y - sourceStock.y
     const len = Math.sqrt(dx * dx + dy * dy)
-    if (len > 0) { ux = dx / len; uy = dy / len }
+    if (len > 0) {
+      ux = dx / len
+      uy = dy / len
+    }
   } else if (sourceStock) {
     const dx = node.x - sourceStock.x
     const dy = node.y - sourceStock.y
     const len = Math.sqrt(dx * dx + dy * dy)
-    if (len > 0) { ux = dx / len; uy = dy / len }
+    if (len > 0) {
+      ux = dx / len
+      uy = dy / len
+    }
   } else if (targetStock) {
     const dx = targetStock.x - node.x
     const dy = targetStock.y - node.y
     const len = Math.sqrt(dx * dx + dy * dy)
-    if (len > 0) { ux = dx / len; uy = dy / len }
+    if (len > 0) {
+      ux = dx / len
+      uy = dy / len
+    }
   }
 
   const angle = Math.atan2(uy, ux)
@@ -417,24 +424,9 @@ function FlowValveRenderer({
 
       {/* Butterfly Valve Symbol (rotated) */}
       <g transform={`translate(${x}, ${y}) rotate(${deg})`}>
-        <polygon
-          points="-12,-8 -12,8 0,0"
-          fill={fillVal}
-          stroke={strokeVal}
-          strokeWidth={2}
-        />
-        <polygon
-          points="12,-8 12,8 0,0"
-          fill={fillVal}
-          stroke={strokeVal}
-          strokeWidth={2}
-        />
-        <circle
-          cx="0"
-          cy="0"
-          r="3.5"
-          fill="#7c3aed"
-        />
+        <polygon points="-12,-8 -12,8 0,0" fill={fillVal} stroke={strokeVal} strokeWidth={2} />
+        <polygon points="12,-8 12,8 0,0" fill={fillVal} stroke={strokeVal} strokeWidth={2} />
+        <circle cx="0" cy="0" r="3.5" fill="#7c3aed" />
       </g>
 
       {/* Flow Label Offset Below */}
@@ -453,7 +445,6 @@ function FlowValveRenderer({
     </g>
   )
 }
-
 
 interface NodeRendererProps {
   node: DiagramNode
@@ -627,18 +618,12 @@ function NodeRenderer({
       />
       {/* Overridden indicator dot */}
       {isOverridden && !isStartNode && !isActive && (
-        <circle
-          cx={left + width - 6}
-          cy={top + 6}
-          r={3}
-          fill="#d97706"
-        />
+        <circle cx={left + width - 6} cy={top + 6} r={3} fill="#d97706" />
       )}
       {labelEl}
     </g>
   )
 }
-
 
 interface TooltipOverlayProps {
   nodeId: string
@@ -668,7 +653,9 @@ function TooltipOverlay({ nodeId, nodes, model }: TooltipOverlayProps) {
   const boxHeight = lines.length * lineHeight + padding * 2
 
   const showOnLeft = node.x > 450
-  const tooltipX = showOnLeft ? node.x - node.width / 2 - boxWidth - 10 : node.x + node.width / 2 + 10
+  const tooltipX = showOnLeft
+    ? node.x - node.width / 2 - boxWidth - 10
+    : node.x + node.width / 2 + 10
   const tooltipY = node.y - boxHeight / 2
 
   return (
@@ -693,14 +680,15 @@ function TooltipOverlay({ nodeId, nodes, model }: TooltipOverlayProps) {
           fill="#f1f5f9"
           style={{ userSelect: 'none' }}
         >
-          <tspan fontWeight="600" fill="#94a3b8">{line.label}: </tspan>
+          <tspan fontWeight="600" fill="#94a3b8">
+            {line.label}:{' '}
+          </tspan>
           {line.value}
         </text>
       ))}
     </g>
   )
 }
-
 
 interface StockFlowDiagramProps {
   model: ModelSchema
@@ -777,7 +765,13 @@ export function StockFlowDiagram({
 
   const hasAnyActive = Boolean(startNodeId)
 
-  const dragRef = useRef<{ active: boolean; startX: number; startY: number; panX: number; panY: number }>({
+  const dragRef = useRef<{
+    active: boolean
+    startX: number
+    startY: number
+    panX: number
+    panY: number
+  }>({
     active: false,
     startX: 0,
     startY: 0,
@@ -813,7 +807,12 @@ export function StockFlowDiagram({
             if (Array.isArray(parsed.nodes)) {
               const savedCoords = new Map<string, { x: number; y: number }>()
               parsed.nodes.forEach((n: any) => {
-                if (n && typeof n.id === 'string' && typeof n.x === 'number' && typeof n.y === 'number') {
+                if (
+                  n &&
+                  typeof n.id === 'string' &&
+                  typeof n.x === 'number' &&
+                  typeof n.y === 'number'
+                ) {
                   savedCoords.set(n.id, { x: n.x, y: n.y })
                 }
               })
@@ -845,7 +844,13 @@ export function StockFlowDiagram({
 
   const handleMouseDown = (e: React.MouseEvent<SVGSVGElement>) => {
     if (draggingNodeId || draggingEdgeId) return
-    dragRef.current = { active: true, startX: e.clientX, startY: e.clientY, panX: pan.x, panY: pan.y }
+    dragRef.current = {
+      active: true,
+      startX: e.clientX,
+      startY: e.clientY,
+      panX: pan.x,
+      panY: pan.y,
+    }
   }
 
   const handleMouseMove = (e: React.MouseEvent<SVGSVGElement>) => {
@@ -925,7 +930,7 @@ export function StockFlowDiagram({
 
   if (graphData.nodes.length === 0) {
     return (
-      <div className="flex h-64 items-center justify-center text-sm text-primary-500">
+      <div className="text-primary-500 flex h-64 items-center justify-center text-sm">
         No variables to display.
       </div>
     )
@@ -933,7 +938,7 @@ export function StockFlowDiagram({
 
   if (graphData.nodes.length > 0 && nodes.length === 0) {
     return (
-      <div className="flex h-64 items-center justify-center text-sm text-primary-500">
+      <div className="text-primary-500 flex h-64 items-center justify-center text-sm">
         Cargando diagrama...
       </div>
     )
@@ -942,17 +947,18 @@ export function StockFlowDiagram({
   const influenceEdges = graphData.edges.filter((e) => e.kind === 'influence')
   const flowNodes = nodes.filter((n) => n.kind === 'flow')
 
-  const svgCursorClass = (draggingNodeId || draggingEdgeId)
-    ? 'cursor-grabbing'
-    : isEditMode
-      ? 'cursor-default'
-      : 'cursor-grab active:cursor-grabbing'
+  const svgCursorClass =
+    draggingNodeId || draggingEdgeId
+      ? 'cursor-grabbing'
+      : isEditMode
+        ? 'cursor-default'
+        : 'cursor-grab active:cursor-grabbing'
 
   return (
     <div className="relative">
       {/* Controls Overlay */}
       {!readOnly && (
-        <div className="absolute right-3 top-3 z-10 flex gap-2">
+        <div className="absolute top-3 right-3 z-10 flex gap-2">
           {isEditMode && (
             <button
               type="button"
@@ -968,7 +974,7 @@ export function StockFlowDiagram({
                   }
                 }
               }}
-              className="flex items-center gap-1 rounded-lg border border-primary-200 bg-white px-2.5 py-1.5 text-xs font-semibold text-primary-700 shadow-sm transition-all hover:bg-primary-50 focus:outline-none focus:ring-2 focus:ring-primary-500"
+              className="border-primary-200 text-primary-700 hover:bg-primary-50 focus:ring-primary-500 flex items-center gap-1 rounded-lg border bg-white px-2.5 py-1.5 text-xs font-semibold shadow-sm transition-all focus:ring-2 focus:outline-none"
               title="Restaurar distribución automática"
             >
               <IconRefresh className="h-3.5 w-3.5" />
@@ -984,10 +990,11 @@ export function StockFlowDiagram({
               setIsEditMode(!isEditMode)
               setHoveredNodeId(null)
             }}
-            className={`flex items-center gap-1.5 rounded-lg border px-3 py-1.5 text-xs font-semibold shadow-sm transition-all focus:outline-none focus:ring-2 ${isEditMode
-              ? 'border-amber-600 bg-amber-500 text-white hover:bg-amber-600 focus:ring-amber-500'
-              : 'border-primary-200 bg-white text-primary-700 hover:bg-primary-50 focus:ring-primary-500'
-              }`}
+            className={`flex items-center gap-1.5 rounded-lg border px-3 py-1.5 text-xs font-semibold shadow-sm transition-all focus:ring-2 focus:outline-none ${
+              isEditMode
+                ? 'border-amber-600 bg-amber-500 text-white hover:bg-amber-600 focus:ring-amber-500'
+                : 'border-primary-200 text-primary-700 hover:bg-primary-50 focus:ring-primary-500 bg-white'
+            }`}
           >
             {isEditMode ? (
               <>
@@ -1006,7 +1013,7 @@ export function StockFlowDiagram({
 
       <svg
         viewBox="0 0 900 500"
-        className={`w-full rounded-lg border border-primary-200 bg-primary-50 transition-colors duration-200 ${svgCursorClass}`}
+        className={`border-primary-200 bg-primary-50 w-full rounded-lg border transition-colors duration-200 ${svgCursorClass}`}
         style={{ touchAction: 'none' }}
         onMouseDown={handleMouseDown}
         onMouseMove={handleMouseMove}
@@ -1015,14 +1022,7 @@ export function StockFlowDiagram({
         onWheel={handleWheel}
       >
         <defs>
-          <marker
-            id="arrow"
-            markerWidth="8"
-            markerHeight="8"
-            refX="6"
-            refY="3"
-            orient="auto"
-          >
+          <marker id="arrow" markerWidth="8" markerHeight="8" refX="6" refY="3" orient="auto">
             <path d="M0,0 L0,6 L8,3 z" fill="#38bdf8" />
           </marker>
           <marker
@@ -1140,13 +1140,7 @@ export function StockFlowDiagram({
           ))}
 
           {/* Tooltip overlay */}
-          {hoveredNodeId && (
-            <TooltipOverlay
-              nodeId={hoveredNodeId}
-              nodes={nodes}
-              model={model}
-            />
-          )}
+          {hoveredNodeId && <TooltipOverlay nodeId={hoveredNodeId} nodes={nodes} model={model} />}
         </g>
       </svg>
     </div>

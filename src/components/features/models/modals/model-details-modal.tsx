@@ -192,13 +192,13 @@ export const ModelDetailsModal = ({ modelId, model }: ModelDetailsModalProps) =>
         ))}
       </div>
 
-      <div className="flex gap-1 border-b border-primary-200">
+      <div className="border-primary-200 flex gap-1 border-b">
         <button
           type="button"
           onClick={() => setActiveTab('json')}
-          className={`px-4 py-1.5 text-sm font-medium rounded-t transition-colors ${
+          className={`rounded-t px-4 py-1.5 text-sm font-medium transition-colors ${
             activeTab === 'json'
-              ? 'bg-primary-100 text-primary-950 border border-b-0 border-primary-200'
+              ? 'bg-primary-100 text-primary-950 border-primary-200 border border-b-0'
               : 'text-primary-600 hover:text-primary-900 hover:bg-primary-50'
           }`}
         >
@@ -207,9 +207,9 @@ export const ModelDetailsModal = ({ modelId, model }: ModelDetailsModalProps) =>
         <button
           type="button"
           onClick={() => setActiveTab('diagram')}
-          className={`px-4 py-1.5 text-sm font-medium rounded-t transition-colors ${
+          className={`rounded-t px-4 py-1.5 text-sm font-medium transition-colors ${
             activeTab === 'diagram'
-              ? 'bg-primary-100 text-primary-950 border border-b-0 border-primary-200'
+              ? 'bg-primary-100 text-primary-950 border-primary-200 border border-b-0'
               : 'text-primary-600 hover:text-primary-900 hover:bg-primary-50'
           }`}
         >

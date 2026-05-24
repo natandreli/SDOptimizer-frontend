@@ -231,21 +231,21 @@ export const OptimizationResults = ({ result, modelName }: OptimizationResultsPr
               </p>
             </div>
             {result.steps_per_simulation !== undefined && (
-              <div className="border-sky-200 bg-sky-50/40 rounded-lg border px-3 py-2.5">
-                <p className="text-sky-700 text-[10px] font-semibold tracking-widest uppercase">
+              <div className="rounded-lg border border-sky-200 bg-sky-50/40 px-3 py-2.5">
+                <p className="text-[10px] font-semibold tracking-widest text-sky-700 uppercase">
                   Steps / Sim
                 </p>
-                <p className="text-sky-950 mt-1 font-mono text-sm font-semibold">
+                <p className="mt-1 font-mono text-sm font-semibold text-sky-950">
                   {result.steps_per_simulation.toLocaleString()}
                 </p>
               </div>
             )}
             {result.total_mathematical_steps !== undefined && (
-              <div className="border-emerald-200 bg-emerald-50/40 rounded-lg border px-3 py-2.5">
-                <p className="text-emerald-700 text-[10px] font-semibold tracking-widest uppercase">
+              <div className="rounded-lg border border-emerald-200 bg-emerald-50/40 px-3 py-2.5">
+                <p className="text-[10px] font-semibold tracking-widest text-emerald-700 uppercase">
                   Total Steps
                 </p>
-                <p className="text-emerald-950 mt-1 font-mono text-sm font-semibold">
+                <p className="mt-1 font-mono text-sm font-semibold text-emerald-950">
                   {result.total_mathematical_steps.toLocaleString()}
                 </p>
               </div>

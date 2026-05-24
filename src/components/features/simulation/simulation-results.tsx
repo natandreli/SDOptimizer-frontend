@@ -39,12 +39,13 @@ const VariableChip = ({
   return (
     <div
       onClick={onClick}
-      className={`inline-flex max-w-full cursor-pointer items-center gap-1.5 rounded-full px-2.5 py-1 text-xs font-medium transition-colors ${isFocused
-        ? 'bg-primary-900 ring-primary-900/20 ring-offset-primary-50 text-white shadow-sm ring-2 ring-offset-2'
-        : 'bg-primary-100 text-primary-900 hover:bg-primary-200'
-        }`}
+      className={`inline-flex max-w-full cursor-pointer items-center gap-1.5 rounded-full px-2.5 py-1 text-xs font-medium transition-colors ${
+        isFocused
+          ? 'bg-primary-900 ring-primary-900/20 ring-offset-primary-50 text-white shadow-sm ring-2 ring-offset-2'
+          : 'bg-primary-100 text-primary-900 hover:bg-primary-200'
+      }`}
     >
-      <div className="shrink-0 h-2 w-2 rounded-full" style={{ backgroundColor: color }} />
+      <div className="h-2 w-2 shrink-0 rounded-full" style={{ backgroundColor: color }} />
       <span className="truncate">{varName}</span>
       <button
         type="button"
@@ -52,8 +53,9 @@ const VariableChip = ({
           e.stopPropagation()
           onRemove()
         }}
-        className={`ml-0.5 cursor-pointer rounded-full p-0.5 hover:bg-black/10 focus:outline-none ${isFocused ? 'hover:bg-white/20' : ''
-          }`}
+        className={`ml-0.5 cursor-pointer rounded-full p-0.5 hover:bg-black/10 focus:outline-none ${
+          isFocused ? 'hover:bg-white/20' : ''
+        }`}
       >
         <IconX size={12} />
       </button>
@@ -78,7 +80,8 @@ export const SimulationResults = ({ result }: SimulationResultsProps) => {
     setPrevResult(result)
     const keys = Object.keys(result.time_series)
     const prevKeys = Object.keys(prevResult.time_series)
-    const hasSameKeys = keys.length === prevKeys.length && keys.every((val) => prevKeys.includes(val))
+    const hasSameKeys =
+      keys.length === prevKeys.length && keys.every((val) => prevKeys.includes(val))
     if (!hasSameKeys) {
       setSelectedVariables(keys.length > 0 ? [keys[0]] : [])
       setFocusedVariable(keys.length > 0 ? keys[0] : '')
@@ -93,18 +96,16 @@ export const SimulationResults = ({ result }: SimulationResultsProps) => {
 
     const base = result.time_series[selectedVariables[0]] || []
     const N = base.length
-    
+
     const startTime = 0
     const endTime = result.config.total_time ?? 100
 
     return base.map((_, index) => {
-      const timeVal = N > 1 
-        ? startTime + (index * (endTime - startTime)) / (N - 1)
-        : startTime
+      const timeVal = N > 1 ? startTime + (index * (endTime - startTime)) / (N - 1) : startTime
 
-      const point: { step: number; timeVal: number; [key: string]: number } = { 
+      const point: { step: number; timeVal: number; [key: string]: number } = {
         step: index,
-        timeVal: Number(timeVal.toFixed(4)) 
+        timeVal: Number(timeVal.toFixed(4)),
       }
       for (const varName of selectedVariables) {
         const series = result.time_series[varName] || []

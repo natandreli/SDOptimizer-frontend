@@ -126,7 +126,7 @@ export const OptimizationSetupForm = ({
 
   return (
     <form onSubmit={onSubmit} className="flex h-full flex-col gap-4 overflow-hidden">
-      <div className="flex-1 overflow-y-auto space-y-5 pr-1.5 scrollbar-thin">
+      <div className="scrollbar-thin flex-1 space-y-5 overflow-y-auto pr-1.5">
         {/* Setup Card */}
         <div className="border-primary-200/90 bg-primary-50/95 flex-shrink-0 rounded-xl border p-4 shadow-sm">
           <div className="mb-3 flex items-center gap-2">
@@ -207,7 +207,9 @@ export const OptimizationSetupForm = ({
                       step={1}
                       value={effectiveMaxRuns}
                       setValue={onMaxRunsChange}
-                      placeholder={optimizationOptions ? String(optimizationOptions.defaults.max_runs) : ''}
+                      placeholder={
+                        optimizationOptions ? String(optimizationOptions.defaults.max_runs) : ''
+                      }
                       required
                       disabled={isSubmitting}
                       className="font-mono text-sm"
@@ -226,7 +228,9 @@ export const OptimizationSetupForm = ({
                       step={0.0001}
                       value={effectiveEpsilon}
                       setValue={onEpsilonChange}
-                      placeholder={optimizationOptions ? String(optimizationOptions.defaults.epsilon) : ''}
+                      placeholder={
+                        optimizationOptions ? String(optimizationOptions.defaults.epsilon) : ''
+                      }
                       required
                       disabled={isSubmitting}
                       className="font-mono text-sm"
@@ -242,7 +246,11 @@ export const OptimizationSetupForm = ({
                       step={0.001}
                       value={effectiveGlobalRho}
                       setValue={onGlobalRhoChange}
-                      placeholder={optimizationOptions?.parameters?.[0] ? String(optimizationOptions.parameters[0].suggested_rho_factor) : ''}
+                      placeholder={
+                        optimizationOptions?.parameters?.[0]
+                          ? String(optimizationOptions.parameters[0].suggested_rho_factor)
+                          : ''
+                      }
                       required
                       disabled={isSubmitting}
                       className="font-mono text-sm"
@@ -254,7 +262,9 @@ export const OptimizationSetupForm = ({
                   <div className="space-y-1">
                     <span className="text-primary-700 mb-1 flex items-center gap-1 text-[10px] font-semibold tracking-widest uppercase">
                       Final Time
-                      <InfoTooltip content={`Final simulation time. Unit: ${optimizationOptions?.defaults.time_unit || 'Not defined in model'}`} />
+                      <InfoTooltip
+                        content={`Final simulation time. Unit: ${optimizationOptions?.defaults.time_unit || 'Not defined in model'}`}
+                      />
                     </span>
                     <Input
                       type="number"
@@ -262,7 +272,9 @@ export const OptimizationSetupForm = ({
                       step={1}
                       value={effectiveTotalTime}
                       setValue={onTotalTimeChange}
-                      placeholder={optimizationOptions ? String(optimizationOptions.defaults.total_time) : ''}
+                      placeholder={
+                        optimizationOptions ? String(optimizationOptions.defaults.total_time) : ''
+                      }
                       required
                       disabled={isSubmitting}
                       className="font-mono text-sm"
@@ -271,7 +283,9 @@ export const OptimizationSetupForm = ({
                   <div className="space-y-1">
                     <span className="text-primary-700 mb-1 flex items-center gap-1 text-[10px] font-semibold tracking-widest uppercase">
                       Time Step (dt)
-                      <InfoTooltip content={`Integration time step (dt). Unit: ${optimizationOptions?.defaults.time_unit || 'Not defined in model'}`} />
+                      <InfoTooltip
+                        content={`Integration time step (dt). Unit: ${optimizationOptions?.defaults.time_unit || 'Not defined in model'}`}
+                      />
                     </span>
                     <Input
                       type="number"
@@ -279,7 +293,9 @@ export const OptimizationSetupForm = ({
                       step={0.01}
                       value={effectiveDt}
                       setValue={onDtChange}
-                      placeholder={optimizationOptions ? String(optimizationOptions.defaults.dt) : ''}
+                      placeholder={
+                        optimizationOptions ? String(optimizationOptions.defaults.dt) : ''
+                      }
                       required
                       disabled={isSubmitting}
                       className="font-mono text-sm"
@@ -292,12 +308,14 @@ export const OptimizationSetupForm = ({
                   <motion.div
                     initial={{ opacity: 0, y: 10 }}
                     animate={{ opacity: 1, y: 0 }}
-                    className="mt-3 border-sky-200 bg-sky-50/70 rounded-lg border p-3 text-xs shadow-sm"
+                    className="mt-3 rounded-lg border border-sky-200 bg-sky-50/70 p-3 text-xs shadow-sm"
                   >
                     <div className="mb-1.5 flex items-center justify-between">
-                      <span className="text-sky-950 font-semibold text-[11px] tracking-wide uppercase">Workload preview</span>
+                      <span className="text-[11px] font-semibold tracking-wide text-sky-950 uppercase">
+                        Workload preview
+                      </span>
                     </div>
-                    <div className="text-primary-950 space-y-1 font-medium text-[11px]">
+                    <div className="text-primary-950 space-y-1 text-[11px] font-medium">
                       <div className="flex justify-between">
                         <span className="text-primary-800/80">Steps per Run:</span>
                         <span className="font-mono">{stepsPerSim.toLocaleString()}</span>
@@ -306,10 +324,12 @@ export const OptimizationSetupForm = ({
                         <span className="text-primary-800/80">Total Runs:</span>
                         <span className="font-mono">{parsedMaxRuns.toLocaleString()}</span>
                       </div>
-                      <div className="border-sky-200/50 my-1 border-t" />
+                      <div className="my-1 border-t border-sky-200/50" />
                       <div className="flex justify-between font-bold">
                         <span className="text-primary-900">Total Steps:</span>
-                        <span className="font-mono text-sky-700">{totalMathSteps.toLocaleString()}</span>
+                        <span className="font-mono text-sky-700">
+                          {totalMathSteps.toLocaleString()}
+                        </span>
                       </div>
                     </div>
                   </motion.div>
@@ -329,7 +349,7 @@ export const OptimizationSetupForm = ({
               animate={{ opacity: 1, height: 'auto' }}
               exit={{ opacity: 0, height: 0 }}
               transition={{ duration: 0.3, ease: 'easeInOut' }}
-              className="flex flex-col shrink-0"
+              className="flex shrink-0 flex-col"
             >
               <div className="border-primary-200/90 bg-primary-50/95 flex flex-col rounded-xl border p-4 shadow-sm">
                 <div className="mb-3 flex shrink-0 items-center justify-between">
@@ -353,7 +373,9 @@ export const OptimizationSetupForm = ({
                       key={parameter.name}
                       className="border-primary-200/70 bg-primary-100/30 shrink-0 snap-start rounded-lg border p-3"
                     >
-                      <p className="text-primary-900 mb-2 text-xs font-semibold break-words">{parameter.name}</p>
+                      <p className="text-primary-900 mb-2 text-xs font-semibold break-words">
+                        {parameter.name}
+                      </p>
                       <div className="space-y-2">
                         <div className="flex items-center justify-between gap-2">
                           <span className="text-primary-800/75 w-16 text-[10px] font-bold tracking-wider uppercase">
@@ -381,7 +403,9 @@ export const OptimizationSetupForm = ({
                             type="number"
                             className="flex-1 font-mono text-xs"
                             step={0.0001}
-                            value={boundMins[parameter.name] ?? String(parameter.suggested_bounds[0])}
+                            value={
+                              boundMins[parameter.name] ?? String(parameter.suggested_bounds[0])
+                            }
                             setValue={(value) =>
                               onBoundMinsChange((current) => ({
                                 ...current,
@@ -399,7 +423,9 @@ export const OptimizationSetupForm = ({
                             type="number"
                             className="flex-1 font-mono text-xs"
                             step={0.0001}
-                            value={boundMaxs[parameter.name] ?? String(parameter.suggested_bounds[1])}
+                            value={
+                              boundMaxs[parameter.name] ?? String(parameter.suggested_bounds[1])
+                            }
                             setValue={(value) =>
                               onBoundMaxsChange((current) => ({
                                 ...current,

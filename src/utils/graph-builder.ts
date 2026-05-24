@@ -1,5 +1,10 @@
 import type { ModelSchema } from '@/services/api/models/types'
-import type { DiagramEdge, DiagramNode, GraphData, NodeKind } from '@/components/features/models/modals/stock-flow-diagram.types'
+import type {
+  DiagramEdge,
+  DiagramNode,
+  GraphData,
+  NodeKind,
+} from '@/components/features/models/modals/stock-flow-diagram.types'
 
 /**
  * Converts a variable name into a normalized node ID.
@@ -51,7 +56,7 @@ function addEdge(
   edgeSet: Set<string>,
   source: string,
   target: string,
-  kind: DiagramEdge['kind'],
+  kind: DiagramEdge['kind']
 ): void {
   const key = `${source}:${target}`
   if (!edgeSet.has(key)) {
@@ -125,12 +130,9 @@ export function buildGraphData(model: ModelSchema): GraphData {
   }
 
   // 3. Influence edges parsed from flow and auxiliary equations
-  const allNames = [
-    ...model.stocks,
-    ...model.flows,
-    ...model.auxiliaries,
-    ...model.parameters,
-  ].map((v) => v.name)
+  const allNames = [...model.stocks, ...model.flows, ...model.auxiliaries, ...model.parameters].map(
+    (v) => v.name
+  )
 
   const influencers = [...model.flows, ...model.auxiliaries]
   for (const v of influencers) {

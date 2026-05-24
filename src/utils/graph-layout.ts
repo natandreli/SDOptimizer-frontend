@@ -1,4 +1,7 @@
-import type { DiagramNode, DiagramEdge } from '@/components/features/models/modals/stock-flow-diagram.types'
+import type {
+  DiagramNode,
+  DiagramEdge,
+} from '@/components/features/models/modals/stock-flow-diagram.types'
 
 const CANVAS_W = 900
 const CANVAS_H = 500
@@ -72,13 +75,11 @@ function separateNodes(a: DiagramNode, b: DiagramNode, padding: number): void {
  */
 export function computeLayout(nodes: DiagramNode[], edges: DiagramEdge[]): DiagramNode[] {
   // Deep-copy each node so the originals are never mutated
-  const result: DiagramNode[] = nodes.map(n => ({ ...n }))
+  const result: DiagramNode[] = nodes.map((n) => ({ ...n }))
 
   // ── 1. Position stocks in a centred horizontal row ──────────────────────────
-  const stocks = result.filter(n => n.kind === 'stock')
-  const stockSpacing = stocks.length > 0
-    ? Math.max(160, CANVAS_W / (stocks.length + 1))
-    : 160
+  const stocks = result.filter((n) => n.kind === 'stock')
+  const stockSpacing = stocks.length > 0 ? Math.max(160, CANVAS_W / (stocks.length + 1)) : 160
 
   stocks.forEach((s, i) => {
     s.x = stockSpacing * (i + 1)
@@ -86,17 +87,16 @@ export function computeLayout(nodes: DiagramNode[], edges: DiagramEdge[]): Diagr
   })
 
   // ── 2. Position flows adjacent to their connected stock ─────────────────────
-  const flows = result.filter(n => n.kind === 'flow')
+  const flows = result.filter((n) => n.kind === 'flow')
 
   for (const flow of flows) {
     const connectedEdge = edges.find(
-      e => e.kind === 'flow-pipe' && (e.source === flow.id || e.target === flow.id)
+      (e) => e.kind === 'flow-pipe' && (e.source === flow.id || e.target === flow.id)
     )
 
     if (connectedEdge) {
-      const stockId =
-        connectedEdge.source === flow.id ? connectedEdge.target : connectedEdge.source
-      const stock = result.find(n => n.id === stockId)
+      const stockId = connectedEdge.source === flow.id ? connectedEdge.target : connectedEdge.source
+      const stock = result.find((n) => n.id === stockId)
 
       if (stock) {
         // Place the flow to the left of the stock when it is the source (outflow),
@@ -117,8 +117,8 @@ export function computeLayout(nodes: DiagramNode[], edges: DiagramEdge[]): Diagr
   }
 
   // ── 3. Localize auxiliaries and parameters near their connections ───────────
-  const periphery = result.filter(n => n.kind === 'auxiliary' || n.kind === 'parameter')
-  const stocksAndFlows = result.filter(n => n.kind === 'stock' || n.kind === 'flow')
+  const periphery = result.filter((n) => n.kind === 'auxiliary' || n.kind === 'parameter')
+  const stocksAndFlows = result.filter((n) => n.kind === 'stock' || n.kind === 'flow')
 
   periphery.forEach((node, i) => {
     // Find all connected stocks and flows
@@ -131,7 +131,7 @@ export function computeLayout(nodes: DiagramNode[], edges: DiagramEdge[]): Diagr
       }
     }
 
-    const connectedNodes = stocksAndFlows.filter(n => connectedNodeIds.has(n.id))
+    const connectedNodes = stocksAndFlows.filter((n) => connectedNodeIds.has(n.id))
 
     if (connectedNodes.length > 0) {
       // Calculate average position of connected stocks/flows

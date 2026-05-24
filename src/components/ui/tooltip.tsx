@@ -68,25 +68,25 @@ export function InfoTooltip({ content, className = '' }: InfoTooltipProps) {
 
       {typeof document !== 'undefined'
         ? createPortal(
-          <AnimatePresence>
-            {isVisible && (
-              <motion.div
-                initial={{ opacity: 0, y: -2 }}
-                animate={{ opacity: 1, y: 0 }}
-                exit={{ opacity: 0, y: -2 }}
-                transition={{ duration: 0.15 }}
-                className="border-primary-200 bg-primary-50 text-primary-800 pointer-events-none absolute z-[99999] w-48 rounded-md border p-2 text-[11px] leading-snug shadow-xl"
-                style={{
-                  top: `${coords.top}px`,
-                  left: `${coords.left}px`,
-                }}
-              >
-                {content}
-              </motion.div>
-            )}
-          </AnimatePresence>,
-          document.body
-        )
+            <AnimatePresence>
+              {isVisible && (
+                <motion.div
+                  initial={{ opacity: 0, y: -2 }}
+                  animate={{ opacity: 1, y: 0 }}
+                  exit={{ opacity: 0, y: -2 }}
+                  transition={{ duration: 0.15 }}
+                  className="border-primary-200 bg-primary-50 text-primary-800 pointer-events-none absolute z-[99999] w-48 rounded-md border p-2 text-[11px] leading-snug shadow-xl"
+                  style={{
+                    top: `${coords.top}px`,
+                    left: `${coords.left}px`,
+                  }}
+                >
+                  {content}
+                </motion.div>
+              )}
+            </AnimatePresence>,
+            document.body
+          )
         : null}
     </div>
   )
