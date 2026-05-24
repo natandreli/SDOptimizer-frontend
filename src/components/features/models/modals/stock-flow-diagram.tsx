@@ -1,4 +1,4 @@
-import { useMemo, useState, useRef, useEffect } from 'react'
+import { useMemo, useState, useRef } from 'react'
 import { IconArrowsMove, IconCheck, IconRefresh } from '@tabler/icons-react'
 import type { ModelSchema, ModelVariable } from '@/services/api/models/types'
 import type { DiagramNode, DiagramEdge } from './stock-flow-diagram.types'
@@ -706,11 +706,74 @@ export function StockFlowDiagram({
   animateFlows = false,
 }: StockFlowDiagramProps) {
   const graphData = useMemo(() => buildGraphData(model), [model])
-  const [nodes, setNodes] = useState<DiagramNode[]>([])
+
+  const getInitialLayout = (
+    gData: typeof graphData,
+    fileName: string
+  ): { initialNodes: DiagramNode[]; initialOffsets: Record<string, number> } => {
+    if (gData.nodes.length === 0) return { initialNodes: [], initialOffsets: {} }
+    const defaultNodes = computeLayout(gData.nodes, gData.edges)
+    let initialNodes = defaultNodes
+    let initialOffsets: Record<string, number> = {}
+
+    try {
+      const saved = localStorage.getItem(`sd_layout_${fileName}`)
+      if (saved) {
+        const parsed = JSON.parse(saved)
+        if (parsed && typeof parsed === 'object') {
+          if (Array.isArray(parsed.nodes)) {
+            const savedCoords = new Map<string, { x: number; y: number }>()
+            parsed.nodes.forEach((item: unknown) => {
+              const n = item as Record<string, unknown>
+              if (
+                n &&
+                typeof n === 'object' &&
+                typeof n.id === 'string' &&
+                typeof n.x === 'number' &&
+                typeof n.y === 'number'
+              ) {
+                savedCoords.set(n.id, { x: n.x, y: n.y })
+              }
+            })
+
+            initialNodes = defaultNodes.map((node) => {
+              const savedPos = savedCoords.get(node.id)
+              if (savedPos) {
+                return { ...node, x: savedPos.x, y: savedPos.y }
+              }
+              return node
+            })
+          }
+          if (parsed.edgeOffsets && typeof parsed.edgeOffsets === 'object') {
+            initialOffsets = parsed.edgeOffsets as Record<string, number>
+          }
+        }
+      }
+    } catch (e) {
+      console.error('Failed to load saved diagram layout', e)
+    }
+
+    return { initialNodes, initialOffsets }
+  }
+
+  const [prevFileName, setPrevFileName] = useState(model.file_name)
+  const [nodes, setNodes] = useState<DiagramNode[]>(
+    () => getInitialLayout(graphData, model.file_name).initialNodes
+  )
+  const [edgeOffsets, setEdgeOffsets] = useState<Record<string, number>>(
+    () => getInitialLayout(graphData, model.file_name).initialOffsets
+  )
+
+  if (model.file_name !== prevFileName) {
+    setPrevFileName(model.file_name)
+    const layout = getInitialLayout(graphData, model.file_name)
+    setNodes(layout.initialNodes)
+    setEdgeOffsets(layout.initialOffsets)
+  }
+
   const [isEditMode, setIsEditMode] = useState(false)
   const [draggingNodeId, setDraggingNodeId] = useState<string | null>(null)
   const [draggingEdgeId, setDraggingEdgeId] = useState<string | null>(null)
-  const [edgeOffsets, setEdgeOffsets] = useState<Record<string, number>>({})
 
   const [pan, setPan] = useState({ x: 0, y: 0 })
   const [zoom, setZoom] = useState(1)
@@ -792,55 +855,6 @@ export function StockFlowDiagram({
       console.error('Failed to save diagram layout', e)
     }
   }
-
-  useEffect(() => {
-    if (graphData.nodes.length > 0) {
-      const defaultNodes = computeLayout(graphData.nodes, graphData.edges)
-      let initialNodes = defaultNodes
-      let initialOffsets = {}
-
-      try {
-        const saved = localStorage.getItem(`sd_layout_${model.file_name}`)
-        if (saved) {
-          const parsed = JSON.parse(saved)
-          if (parsed && typeof parsed === 'object') {
-            if (Array.isArray(parsed.nodes)) {
-              const savedCoords = new Map<string, { x: number; y: number }>()
-              parsed.nodes.forEach((n: any) => {
-                if (
-                  n &&
-                  typeof n.id === 'string' &&
-                  typeof n.x === 'number' &&
-                  typeof n.y === 'number'
-                ) {
-                  savedCoords.set(n.id, { x: n.x, y: n.y })
-                }
-              })
-
-              initialNodes = defaultNodes.map((node) => {
-                const savedPos = savedCoords.get(node.id)
-                if (savedPos) {
-                  return { ...node, x: savedPos.x, y: savedPos.y }
-                }
-                return node
-              })
-            }
-            if (parsed.edgeOffsets && typeof parsed.edgeOffsets === 'object') {
-              initialOffsets = parsed.edgeOffsets
-            }
-          }
-        }
-      } catch (e) {
-        console.error('Failed to load saved diagram layout', e)
-      }
-
-      setNodes(initialNodes)
-      setEdgeOffsets(initialOffsets)
-    } else {
-      setNodes([])
-      setEdgeOffsets({})
-    }
-  }, [graphData, model.file_name])
 
   const handleMouseDown = (e: React.MouseEvent<SVGSVGElement>) => {
     if (draggingNodeId || draggingEdgeId) return
