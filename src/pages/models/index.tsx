@@ -23,7 +23,7 @@ export const ModelsPage = () => {
         </p>
       </section>
 
-      <div className="mx-auto grid max-w-6xl grid-cols-1 gap-6 lg:grid-cols-[1fr_350px]">
+      <div className="mx-auto grid w-full grid-cols-1 gap-6 lg:grid-cols-[1fr_350px]">
         <div className="order-2 lg:order-1">
           <div className="h-full p-1 backdrop-blur-sm">
             <ModelsList models={models} isLoading={isLoading} />
