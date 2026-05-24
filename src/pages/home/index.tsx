@@ -95,7 +95,7 @@ export const HomePage = () => {
           </div>
         </Link>
 
-        <Link to="/optimize" className="group block h-full rounded-2xl outline-none">
+        <Link to="/optimization" className="group block h-full rounded-2xl outline-none">
           <div className="border-primary-200/90 bg-primary-50/60 flex h-full flex-col rounded-2xl border p-6 shadow-sm backdrop-blur-sm transition-all hover:-translate-y-1 hover:border-orange-300 hover:shadow-md">
             <div className="mb-6 flex h-10 w-10 items-center justify-center rounded-xl bg-orange-100 text-orange-700">
               <IconBrain className="h-5 w-5" />
