@@ -992,7 +992,7 @@ export function StockFlowDiagram({
               title="Restaurar distribución automática"
             >
               <IconRefresh className="h-3.5 w-3.5" />
-              Reiniciar
+              Reset
             </button>
           )}
           <button
