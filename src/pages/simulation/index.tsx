@@ -1,7 +1,7 @@
 import { type FormEvent, useEffect, useMemo, useState } from 'react'
 import { useMutation, useQuery } from '@tanstack/react-query'
 import type { AxiosError } from 'axios'
-import { IconChartLine } from '@tabler/icons-react'
+import { IconChartDots3, IconChartLine } from '@tabler/icons-react'
 import { getAllModels, getSimulationOptions, simulateModel } from '@/services/api/models'
 import type { SimulationConfig, SimulationResult } from '@/services/api/models/types'
 import { SimulationSetupForm } from '@/components/features/simulation/simulation-setup-form'
@@ -18,7 +18,7 @@ export const SimulationPage = () => {
   const [parameterOverrides, setParameterOverrides] = useState<Record<string, string>>({})
   const [simulationProgress, setSimulationProgress] = useState(0)
   const [result, setResult] = useState<SimulationResult | null>(null)
-  
+
   // Tab state: 'diagram' or 'results'
   const [activeTab, setActiveTab] = useState<'diagram' | 'results'>('diagram')
   // Active parameter hovered/focused state
@@ -213,33 +213,35 @@ export const SimulationPage = () => {
         <section className="border-primary-200/90 bg-primary-50/95 flex h-full min-h-0 flex-col rounded-xl border shadow-sm">
           <div className="border-primary-200/70 flex items-center justify-between border-b px-5 py-3">
             <div className="flex items-center gap-4">
-              <div className="flex items-center gap-2">
-                <IconChartLine className="text-primary-700 h-4 w-4" />
-                <span className="text-primary-950 text-base font-semibold">Results</span>
-              </div>
               {selectedModelId && currentModelSchema && (
-                <div className="flex items-center gap-1 rounded-lg bg-primary-100 p-1">
+                <div className="bg-primary-100 flex items-center gap-1 rounded-lg p-1">
                   <button
                     type="button"
                     onClick={() => setActiveTab('diagram')}
-                    className={`rounded-md px-3 py-1.5 text-xs font-semibold transition-all ${
+                    className={`rounded-md px-3 py-1.5 font-semibold transition-all ${
                       activeTab === 'diagram'
-                        ? 'bg-white text-primary-950 shadow-sm'
+                        ? 'text-primary-950 bg-white shadow-sm'
                         : 'text-primary-600 hover:text-primary-900 hover:bg-primary-50/50'
                     }`}
                   >
-                    Diagrama
+                    <div className="flex items-center gap-2">
+                      <IconChartDots3 className="text-primary-700 h-4 w-4" />
+                      <span className="text-primary-950 text-base font-semibold">Diagram</span>
+                    </div>
                   </button>
                   <button
                     type="button"
                     onClick={() => setActiveTab('results')}
-                    className={`rounded-md px-3 py-1.5 text-xs font-semibold transition-all ${
+                    className={`rounded-md px-3 py-1.5 font-semibold transition-all ${
                       activeTab === 'results'
-                        ? 'bg-white text-primary-950 shadow-sm'
+                        ? 'text-primary-950 bg-white shadow-sm'
                         : 'text-primary-600 hover:text-primary-900 hover:bg-primary-50/50'
                     }`}
                   >
-                    Resultados
+                    <div className="flex items-center gap-2">
+                      <IconChartLine className="text-primary-700 h-4 w-4" />
+                      <span className="text-primary-950 text-base font-semibold">Results</span>
+                    </div>
                   </button>
                 </div>
               )}

@@ -65,7 +65,10 @@ export const OptimizationPage = () => {
   const effectiveDt =
     dt || (optimizationOptions?.defaults?.dt ? String(optimizationOptions.defaults.dt) : '')
   const effectiveTotalTime =
-    totalTime || (optimizationOptions?.defaults?.total_time ? String(optimizationOptions.defaults.total_time) : '')
+    totalTime ||
+    (optimizationOptions?.defaults?.total_time
+      ? String(optimizationOptions.defaults.total_time)
+      : '')
   const effectiveGlobalRho =
     globalRho ||
     (optimizationOptions?.parameters?.[0]
