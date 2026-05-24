@@ -1013,12 +1013,12 @@ export function StockFlowDiagram({
             {isEditMode ? (
               <>
                 <IconCheck className="h-3.5 w-3.5" />
-                Guardar Distribución
+                Save Layout
               </>
             ) : (
               <>
                 <IconArrowsMove className="h-3.5 w-3.5" />
-                Editar Distribución
+                Edit Layout
               </>
             )}
           </button>
