@@ -3,6 +3,7 @@ import { Header } from '@/components/ui/header'
 import { Footer } from '@/components/ui/footer'
 
 import { AnimatedBackground } from '@/components/ui/animated-background'
+import { CookieConsent } from '@/components/ui/cookie-consent'
 
 export const AppLayout = () => {
   return (
@@ -13,6 +14,7 @@ export const AppLayout = () => {
         <Outlet />
       </main>
       <Footer />
+      <CookieConsent />
     </div>
   )
 }

@@ -1,5 +1,6 @@
 import { useQuery } from '@tanstack/react-query'
 import { checkApiHealth } from '@/services/api'
+import { Link } from 'react-router-dom'
 
 export const Footer = () => {
   const { data: apiStatus, isError } = useQuery({
@@ -15,6 +16,14 @@ export const Footer = () => {
     <footer className="border-primary-200/70 bg-primary-50/85 relative z-10 w-full border-t px-6 py-4 backdrop-blur-lg lg:px-10">
       <div className="text-primary-900/85 mx-auto flex max-w-7xl items-center justify-between text-sm">
         <p className="font-medium">SDOptimizer © {new Date().getFullYear()}</p>
+
+        <Link
+          to="/terms-and-conditions"
+          className="text-primary-900/70 hover:text-primary-900 hidden font-medium underline-offset-4 hover:underline sm:block"
+        >
+          Terms & Conditions
+        </Link>
+
         <div className="bg-primary-100/90 flex items-center gap-2 rounded-full px-3 py-1.5">
           <div
             className={`h-2 w-2 rounded-full ${isApiHealthy ? 'bg-emerald-500' : 'bg-primary-500'}`}
