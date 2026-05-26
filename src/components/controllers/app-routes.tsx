@@ -4,6 +4,7 @@ import { HomePage } from '@/pages/home'
 import { ModelsPage } from '@/pages/models'
 import { SimulationPage } from '@/pages/simulation'
 import { OptimizationPage } from '@/pages/optimization'
+import { TermsPage } from '@/pages/terms-and-conditions'
 
 export const AppRoutes = () => {
   return (
@@ -14,6 +15,7 @@ export const AppRoutes = () => {
         <Route path="/simulation" element={<SimulationPage />} />
         <Route path="/optimization" element={<OptimizationPage />} />
         <Route path="*" element={<Navigate to="/" replace />} />
+        <Route path="/terms-and-conditions" element={<TermsPage />} />
       </Route>
     </Routes>
   )
