@@ -14,7 +14,7 @@ export const TermsPage = () => {
   }
 
   return (
-    <div className="animate-fade-in-up -mx-5 -my-6 min-h-0 flex-1 space-y-6 overflow-y-auto px-5 py-6 sm:-my-8 sm:py-8 lg:-mx-46 lg:px-10">
+    <div className="animate-fade-in-up -mx-5 -my-6 space-y-6 px-5 py-6 sm:-my-8 sm:py-8 lg:-mx-46 lg:px-10">
       {/* Back button container - aligned with the card */}
       <div className="mx-auto flex w-full max-w-5xl justify-start">
         <Button

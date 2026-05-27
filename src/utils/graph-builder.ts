@@ -15,16 +15,11 @@ export function normalizeId(name: string): string {
 }
 
 export function extractReferences(equation: string, knownNames: string[]): string[] {
-  // Sort longest-first so "Birth Rate" is matched before "Birth"
   const sorted = [...knownNames].sort((a, b) => b.length - a.length)
   const found: string[] = []
   const cleanEquation = equation.toLowerCase()
 
   for (const name of sorted) {
-    // Generate different possible representations of the variable name in the equation:
-    // 1. Original name lowercased
-    // 2. Snake case (e.g., "Birth Rate" -> "birth_rate")
-    // 3. Replaced space with nothing (e.g., "Birth Rate" -> "birthrate")
     const representations = new Set<string>()
     representations.add(name.toLowerCase())
     representations.add(name.toLowerCase().replace(/\s+/g, '_'))
@@ -32,9 +27,7 @@ export function extractReferences(equation: string, knownNames: string[]): strin
 
     let matched = false
     for (const rep of representations) {
-      // Escape regex special characters in the variable name representation
       const escaped = rep.replace(/[.*+?^${}()|[\]\\]/g, '\\$&')
-      // Use a negative lookbehind/lookahead for word characters to avoid partial matches
       const regex = new RegExp(`(?<![\\w])${escaped}(?![\\w])`, 'i')
       if (regex.test(cleanEquation)) {
         matched = true
@@ -65,13 +58,27 @@ function addEdge(
   }
 }
 
-/** Node dimensions by kind. */
-const NODE_DIMENSIONS: Record<NodeKind, { width: number; height: number }> = {
+/** Node dimensions by kind (static overrides for stock/flow). */
+const STATIC_DIMENSIONS: Partial<Record<NodeKind, { width: number; height: number }>> = {
   stock: { width: 120, height: 50 },
   flow: { width: 60, height: 50 },
-  auxiliary: { width: 90, height: 36 },
-  parameter: { width: 90, height: 36 },
-  shadow: { width: 90, height: 36 },
+}
+
+/**
+ * Calculates ellipse/rect dimensions for label-dependent node kinds.
+ * Uses ~7px per character at fontSize=9 plus fixed vertical padding.
+ */
+function calcLabelDimensions(label: string): { width: number; height: number } {
+  const charWidth = 7
+  const hPadding = 28
+  const vPadding = 20
+  const minW = 80
+  const minH = 30
+  const rawW = label.length * charWidth + hPadding
+  return {
+    width: Math.max(minW, rawW),
+    height: minH + vPadding / 2,
+  }
 }
 
 /**
@@ -85,7 +92,6 @@ export function buildGraphData(model: ModelSchema): GraphData {
   const edges: DiagramEdge[] = []
   const edgeSet = new Set<string>()
 
-  // 1. Create one DiagramNode per variable across all four categories
   const categories: Array<{ vars: ModelSchema[keyof ModelSchema]; kind: NodeKind }> = [
     { vars: model.stocks, kind: 'stock' },
     { vars: model.flows, kind: 'flow' },
@@ -95,7 +101,8 @@ export function buildGraphData(model: ModelSchema): GraphData {
 
   for (const { vars, kind } of categories) {
     for (const v of vars as import('@/services/api/models/types').ModelVariable[]) {
-      const { width, height } = NODE_DIMENSIONS[kind]
+      const staticDims = STATIC_DIMENSIONS[kind]
+      const { width, height } = staticDims ?? calcLabelDimensions(v.name)
       nodes.push({
         id: normalizeId(v.name),
         label: v.name,
@@ -110,7 +117,6 @@ export function buildGraphData(model: ModelSchema): GraphData {
 
   const nodeIds = new Set(nodes.map((n) => n.id))
 
-  // 2. Flow-pipe edges from stock inflows / outflows
   for (const stock of model.stocks) {
     const stockId = normalizeId(stock.name)
 
@@ -129,7 +135,6 @@ export function buildGraphData(model: ModelSchema): GraphData {
     }
   }
 
-  // 3. Influence edges parsed from flow and auxiliary equations
   const allNames = [...model.stocks, ...model.flows, ...model.auxiliaries, ...model.parameters].map(
     (v) => v.name
   )
@@ -149,8 +154,8 @@ export function buildGraphData(model: ModelSchema): GraphData {
           kind: 'shadow',
           x: 0,
           y: 0,
-          width: NODE_DIMENSIONS.shadow.width,
-          height: NODE_DIMENSIONS.shadow.height,
+          width: calcLabelDimensions('<Time>').width,
+          height: calcLabelDimensions('<Time>').height,
         })
         nodeIds.add('time')
       }

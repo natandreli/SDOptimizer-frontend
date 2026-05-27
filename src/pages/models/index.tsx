@@ -15,7 +15,7 @@ export const ModelsPage = () => {
   })
 
   return (
-    <div className="min-h-0 flex-1 space-y-8 overflow-y-auto">
+    <div className="space-y-8">
       <section className="space-y-1 text-center">
         <p className="text-primary-950 text-3xl font-semibold tracking-tight">Model Management</p>
         <p className="text-primary-900/75 mt-1 text-sm">
@@ -23,14 +23,16 @@ export const ModelsPage = () => {
         </p>
       </section>
 
-      <div className="mx-auto grid w-full grid-cols-1 gap-6 lg:grid-cols-[1fr_350px]">
+      <div className="mx-auto grid w-full grid-cols-1 gap-6 lg:grid-cols-[1fr_auto_350px] lg:gap-8">
         <div className="order-2 lg:order-1">
           <div className="h-full p-1 backdrop-blur-sm">
             <ModelsList models={models} isLoading={isLoading} />
           </div>
         </div>
 
-        <aside className="order-1 space-y-6 lg:order-2">
+        <div className="hidden lg:order-2 lg:block w-[3px] self-stretch bg-gradient-to-b from-primary-100 via-primary-200/80 to-primary-100 rounded-full" />
+
+        <aside className="order-1 space-y-6 lg:order-3 lg:sticky lg:top-4 self-start">
           <div className="border-primary-100 rounded-xl border bg-white/30 p-5 text-sm">
             <h4 className="text-primary-900 mb-2 font-semibold">Workspace Info</h4>
             <div className="space-y-3">

@@ -491,7 +491,7 @@ function NodeRenderer({
       y={y}
       textAnchor="middle"
       dominantBaseline="middle"
-      fontSize={11}
+      fontSize={kind === 'stock' ? 11 : 9}
       fill={isStartNode ? '#78350f' : '#1e293b'}
       fontWeight={kind === 'stock' || isStartNode || isActive ? '600' : 'normal'}
       style={{ pointerEvents: 'none', userSelect: 'none' }}

@@ -263,7 +263,7 @@ export const SimulationPage = () => {
             </div>
           )}
 
-          <div className="flex flex-1 flex-col overflow-y-auto p-5">
+          <div className="flex flex-1 flex-col overflow-hidden p-5">
             {activeTab === 'diagram' && currentModelSchema ? (
               <StockFlowDiagram
                 model={currentModelSchema}
