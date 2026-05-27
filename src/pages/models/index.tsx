@@ -47,12 +47,12 @@ export const ModelsPage = () => {
             </div>
           </div>
 
-          <div className="border-primary-200 bg-primary-50/50 rounded-xl border p-5 shadow-sm">
+          <div className="rounded-xl border border-emerald-200 bg-emerald-50/60 p-5 shadow-sm">
             <div className="mb-4 flex items-center gap-2">
-              <div className="bg-primary-100 text-primary-700 flex h-8 w-8 items-center justify-center rounded-lg">
+              <div className="flex h-8 w-8 items-center justify-center rounded-lg bg-emerald-100 text-emerald-600">
                 <IconUpload size={18} />
               </div>
-              <p className="text-primary-950 font-bold">Quick Upload</p>
+              <p className="font-bold text-emerald-900">Quick Upload</p>
             </div>
             <UploadForm onSuccess={() => refetch()} />
           </div>

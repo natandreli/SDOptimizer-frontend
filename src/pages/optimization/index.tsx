@@ -117,6 +117,32 @@ export const OptimizationPage = () => {
     return () => clearTimeout(resetTimer)
   }, [optimizeMutation.isPending, progress])
 
+  useEffect(() => {
+    if (!optimizationOptions) {
+      return
+    }
+    setMaxRuns('100')
+    setEpsilon('0.7')
+    setGlobalRho('0.1')
+    setDt(optimizationOptions.defaults.dt ? String(optimizationOptions.defaults.dt) : '')
+    setTotalTime(optimizationOptions.defaults.total_time ? String(optimizationOptions.defaults.total_time) : '')
+    setSelectedStatistic(optimizationOptions.defaults.statistic || '')
+    setSelectedTargetVariable(optimizationOptions.target_variables[0] || '')
+    setSelectedDirection(optimizationOptions.defaults.direction || '')
+
+    const newInitials: NumericFieldState = {}
+    const newMins: NumericFieldState = {}
+    const newMaxs: NumericFieldState = {}
+    optimizationOptions.parameters.forEach((param) => {
+      newInitials[param.name] = String(param.initial_value)
+      newMins[param.name] = String(param.suggested_bounds[0])
+      newMaxs[param.name] = String(param.suggested_bounds[1])
+    })
+    setInitialValues(newInitials)
+    setBoundMins(newMins)
+    setBoundMaxs(newMaxs)
+  }, [optimizationOptions])
+
   const modelOptions = useMemo(
     () =>
       (models ?? []).map((model) => ({

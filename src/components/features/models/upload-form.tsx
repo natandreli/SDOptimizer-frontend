@@ -1,7 +1,7 @@
 import { useState } from 'react'
 import { useMutation, useQueryClient } from '@tanstack/react-query'
 import { uploadMdlModel } from '@/services/api/models'
-import { IconUpload, IconFileText, IconX } from '@tabler/icons-react'
+import { IconUpload, IconCloudUpload, IconFileText, IconX } from '@tabler/icons-react'
 import { Button } from '@/components/ui/button'
 import { useToast } from '@/hooks/use-toast'
 import { useModal } from '@/hooks/use-modal'
@@ -162,19 +162,20 @@ export const UploadForm = ({ onSuccess }: UploadFormProps) => {
   }
 
   return (
-    <div className="mx-auto w-full max-w-4xl">
-      <form onSubmit={handleSubmit} className="space-y-4">
+    <div className="w-full">
+      <form onSubmit={handleSubmit} className="space-y-3">
+        {/* Dropzone */}
         <div
           onDragEnter={handleDrag}
           onDragLeave={handleDrag}
           onDragOver={handleDrag}
           onDrop={handleDrop}
-          className={`relative flex min-h-[160px] flex-col items-center justify-center rounded-lg border-2 p-4 text-center transition-all duration-200 ${
+          className={`relative flex min-h-[130px] flex-col items-center justify-center rounded-xl border-2 border-dashed p-4 text-center transition-all duration-200 ${
             dragActive
-              ? 'border-primary-400 bg-primary-100/70 shadow-primary-500/15 border-dashed shadow-md'
+              ? 'border-emerald-400 bg-emerald-50 shadow-md shadow-emerald-500/10'
               : file
-                ? 'border-primary-300 bg-primary-50/85 border-solid'
-                : 'border-primary-300 bg-primary-50/70 hover:border-primary-400 hover:bg-primary-100/70 hover:shadow-primary-500/10 border-dashed hover:shadow-sm'
+                ? 'border-emerald-400 bg-emerald-50/60 border-solid'
+                : 'border-emerald-300 bg-emerald-50/40 hover:border-emerald-400 hover:bg-emerald-50/70'
           }`}
         >
           <input
@@ -193,7 +194,7 @@ export const UploadForm = ({ onSuccess }: UploadFormProps) => {
                 e.preventDefault()
                 setFile(null)
               }}
-              className="text-primary-700/80 absolute top-2 right-2 z-10 flex rounded-lg p-1 transition-all hover:scale-110 hover:text-rose-600"
+              className="absolute top-2 right-2 z-10 flex rounded-lg p-1 text-emerald-600/70 transition-all hover:scale-110 hover:text-rose-500"
               aria-label="Clear file"
             >
               <IconX className="h-4 w-4" />
@@ -201,30 +202,34 @@ export const UploadForm = ({ onSuccess }: UploadFormProps) => {
           )}
           <div className="flex flex-col items-center justify-center space-y-2">
             {file ? (
-              <IconFileText className="text-primary-600 h-10 w-10" />
+              <IconFileText className="h-9 w-9 text-emerald-500" />
             ) : (
-              <IconUpload className="text-primary-400 h-10 w-10" />
+              <div className="flex h-14 w-14 items-center justify-center rounded-full bg-white shadow-sm border border-emerald-100/80">
+                <IconCloudUpload className="h-7 w-7 text-emerald-500" />
+              </div>
             )}
             <div className="max-w-[200px]">
-              <p className="text-primary-950 truncate text-xs font-semibold">
-                {file ? file.name : 'Drop file or click to browse'}
+              <p className="truncate text-xs font-semibold text-emerald-800">
+                {file ? file.name : 'Drop file here or click to browse'}
               </p>
-              <p className="text-primary-800/60 mt-0.5 text-[10px]">
+              <p className="mt-0.5 text-[10px] text-emerald-600/70">
                 {file ? formatFileSize(file.size) : 'Supports .mdl files'}
               </p>
             </div>
           </div>
         </div>
-        <div className="flex justify-end">
-          <Button
-            type="submit"
-            variant="success"
-            isLoading={uploadMutation.isPending}
-            disabled={!file}
-          >
-            Upload MDL File
-          </Button>
-        </div>
+
+        {/* Full-width upload button */}
+        <Button
+          type="submit"
+          variant="success"
+          icon={<IconUpload className="h-4 w-4" />}
+          isLoading={uploadMutation.isPending}
+          disabled={!file}
+          className="w-full"
+        >
+          Upload MDL File
+        </Button>
       </form>
     </div>
   )
