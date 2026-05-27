@@ -50,6 +50,11 @@ export const SimulationSetupForm = ({
   activeParam = null,
   onActiveParamChange,
 }: SimulationSetupFormProps) => {
+  const parsedTotalTime = Number(totalTime ?? (simulationOptions ? String(simulationOptions.defaults.total_time) : '')) || 0
+  const parsedDt = Number(dt ?? (simulationOptions ? String(simulationOptions.defaults.dt) : '')) || 0
+  const stepsPerSim = parsedDt > 0 ? Math.floor(parsedTotalTime / parsedDt) : 0
+  const timeUnit = simulationOptions?.defaults.time_unit || 'Time Unit'
+  const stepsPerTimeUnit = parsedDt > 0 ? 1 / parsedDt : 0
   const modelPlaceholder = isModelsLoading
     ? 'Loading models...'
     : modelOptions.length === 0
@@ -149,6 +154,42 @@ export const SimulationSetupForm = ({
                         className="font-mono text-sm"
                       />
                     </div>
+
+                    {/* Simulation Load Preview Card */}
+                    {stepsPerSim > 0 && (
+                      <motion.div
+                        initial={{ opacity: 0, y: 10 }}
+                        animate={{ opacity: 1, y: 0 }}
+                        className="mt-3 rounded-lg border border-sky-200 bg-sky-50/70 p-3 text-xs shadow-sm"
+                      >
+                        <div className="mb-1.5 flex items-center justify-between">
+                          <span className="text-[11px] font-semibold tracking-wide text-sky-950 uppercase">
+                            Workload preview
+                          </span>
+                        </div>
+                        <div className="text-primary-950 space-y-1 text-[11px] font-medium">
+                          <div className="flex justify-between">
+                            <span className="text-primary-800/80">Steps per {timeUnit}:</span>
+                            <span className="font-mono">
+                              {stepsPerTimeUnit % 1 === 0 ? stepsPerTimeUnit : stepsPerTimeUnit.toFixed(2)}
+                            </span>
+                          </div>
+                          <div className="flex justify-between">
+                            <span className="text-primary-800/80">Total Duration:</span>
+                            <span className="font-mono">
+                              {parsedTotalTime} {parsedTotalTime === 1 ? timeUnit : `${timeUnit}s`}
+                            </span>
+                          </div>
+                          <div className="my-1 border-t border-sky-200/50" />
+                          <div className="flex justify-between font-bold">
+                            <span className="text-primary-900">Simulation Steps:</span>
+                            <span className="font-mono text-sky-700">
+                              {stepsPerSim.toLocaleString()}
+                            </span>
+                          </div>
+                        </div>
+                      </motion.div>
+                    )}
                   </div>
                 </motion.div>
               )}
