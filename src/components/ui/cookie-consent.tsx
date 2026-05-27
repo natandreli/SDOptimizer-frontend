@@ -1,9 +1,12 @@
 import { useState } from 'react'
 import { motion, AnimatePresence } from 'framer-motion'
 import { Button } from '@/components/ui/button'
-import { Link } from 'react-router-dom'
+import { Link, useLocation } from 'react-router-dom'
 
 export const CookieConsent = () => {
+  const location = useLocation()
+  const isTermsPage = location.pathname === '/terms-and-conditions'
+
   const [isVisible, setIsVisible] = useState(() => {
     try {
       const hasConsented = localStorage.getItem('sdo-cookie-consent')
@@ -55,7 +58,7 @@ export const CookieConsent = () => {
 
   return (
     <AnimatePresence>
-      {isVisible && (
+      {isVisible && !isTermsPage && (
         <>
           {/* Overlay that blocks the app if they banner is visible (optional, but requested since app needs cookies) */}
           <motion.div
