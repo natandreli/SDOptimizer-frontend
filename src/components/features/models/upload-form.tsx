@@ -170,7 +170,7 @@ export const UploadForm = ({ onSuccess }: UploadFormProps) => {
           onDragLeave={handleDrag}
           onDragOver={handleDrag}
           onDrop={handleDrop}
-          className={`relative flex min-h-[130px] flex-col items-center justify-center rounded-xl border-2 border-dashed p-4 text-center transition-all duration-200 ${
+          className={`group relative flex min-h-[130px] flex-col items-center justify-center rounded-xl border-2 border-dashed p-4 text-center transition-all duration-200 ${
             dragActive
               ? 'border-emerald-400 bg-emerald-50 shadow-md shadow-emerald-500/10'
               : file
@@ -192,6 +192,7 @@ export const UploadForm = ({ onSuccess }: UploadFormProps) => {
               type="button"
               onClick={(e) => {
                 e.preventDefault()
+                e.stopPropagation()
                 setFile(null)
               }}
               className="absolute top-2 right-2 z-10 flex rounded-lg p-1 text-emerald-600/70 transition-all hover:scale-110 hover:text-rose-500"
@@ -200,12 +201,12 @@ export const UploadForm = ({ onSuccess }: UploadFormProps) => {
               <IconX className="h-4 w-4" />
             </button>
           )}
-          <div className="flex flex-col items-center justify-center space-y-2">
+          <div className="flex flex-col items-center justify-center space-y-2 pointer-events-none">
             {file ? (
               <IconFileText className="h-9 w-9 text-emerald-500" />
             ) : (
-              <div className="flex h-14 w-14 items-center justify-center rounded-full bg-white shadow-sm border border-emerald-100/80">
-                <IconCloudUpload className="h-7 w-7 text-emerald-500" />
+              <div className="flex h-14 w-14 items-center justify-center rounded-full bg-white shadow-sm border border-emerald-100/80 transition-all duration-300 group-hover:scale-110 group-hover:shadow-md group-hover:border-emerald-200 group-hover:-translate-y-1">
+                <IconCloudUpload className="h-7 w-7 text-emerald-500 transition-transform duration-300 group-hover:scale-105" />
               </div>
             )}
             <div className="max-w-[200px]">
