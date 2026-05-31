@@ -50,8 +50,11 @@ export const SimulationSetupForm = ({
   activeParam = null,
   onActiveParamChange,
 }: SimulationSetupFormProps) => {
-  const parsedTotalTime = Number(totalTime ?? (simulationOptions ? String(simulationOptions.defaults.total_time) : '')) || 0
-  const parsedDt = Number(dt ?? (simulationOptions ? String(simulationOptions.defaults.dt) : '')) || 0
+  const parsedTotalTime =
+    Number(totalTime ?? (simulationOptions ? String(simulationOptions.defaults.total_time) : '')) ||
+    0
+  const parsedDt =
+    Number(dt ?? (simulationOptions ? String(simulationOptions.defaults.dt) : '')) || 0
   const stepsPerSim = parsedDt > 0 ? Math.floor(parsedTotalTime / parsedDt) : 0
   const timeUnit = simulationOptions?.defaults.time_unit || 'Time Unit'
   const stepsPerTimeUnit = parsedDt > 0 ? 1 / parsedDt : 0
@@ -171,7 +174,9 @@ export const SimulationSetupForm = ({
                           <div className="flex justify-between">
                             <span className="text-primary-800/80">Steps per {timeUnit}:</span>
                             <span className="font-mono">
-                              {stepsPerTimeUnit % 1 === 0 ? stepsPerTimeUnit : stepsPerTimeUnit.toFixed(2)}
+                              {stepsPerTimeUnit % 1 === 0
+                                ? stepsPerTimeUnit
+                                : stepsPerTimeUnit.toFixed(2)}
                             </span>
                           </div>
                           <div className="flex justify-between">

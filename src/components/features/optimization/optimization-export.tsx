@@ -3,17 +3,62 @@ import { Button } from '@/components/ui/button'
 import type { OptimizationResult } from '@/services/api/models/types'
 import jsPDF from 'jspdf'
 import autoTable from 'jspdf-autotable'
-import html2canvas from 'html2canvas'
 
 type OptimizationExportProps = {
   result: OptimizationResult
   modelName: string
+  optimizationNumber?: number
+  compact?: boolean
 }
 
 type AutoTableDoc = jsPDF & { lastAutoTable: { finalY: number } }
+type PdfColor = [number, number, number]
+type PdfLineSeries = {
+  label: string
+  values: number[]
+  color: PdfColor
+}
 
-export const OptimizationExport = ({ result, modelName }: OptimizationExportProps) => {
+const PARAMETER_COLORS: PdfColor[] = [
+  [99, 102, 241],
+  [245, 158, 11],
+  [16, 185, 129],
+  [239, 68, 68],
+  [139, 92, 246],
+  [6, 182, 212],
+  [249, 115, 22],
+  [236, 72, 153],
+  [20, 184, 166],
+  [132, 204, 22],
+]
+
+const getFiniteBounds = (values: number[]) => {
+  const finiteValues = values.filter(Number.isFinite)
+  if (finiteValues.length === 0) {
+    return { min: 0, max: 1 }
+  }
+
+  const min = Math.min(...finiteValues)
+  const max = Math.max(...finiteValues)
+  if (Math.abs(max - min) < 1e-12) {
+    const padding = Math.abs(max) > 1e-12 ? Math.abs(max) * 0.1 : 1
+    return { min: min - padding, max: max + padding }
+  }
+
+  const padding = (max - min) * 0.08
+  return { min: min - padding, max: max + padding }
+}
+
+export const OptimizationExport = ({
+  result,
+  modelName,
+  optimizationNumber,
+  compact = false,
+}: OptimizationExportProps) => {
   const cleanModelName = modelName.replace(/\.mdl$/i, '')
+  const runNumber = optimizationNumber ?? result.optimization_number
+  const runSuffix = runNumber ? `-run-${runNumber}` : ''
+  const fileBase = `optimization-${cleanModelName.replace(/\s+/g, '-')}${runSuffix}`
 
   const getFormattedDate = () => {
     const now = new Date()
@@ -35,12 +80,14 @@ export const OptimizationExport = ({ result, modelName }: OptimizationExportProp
         generatedAt: getFormattedDate(),
         modelName: cleanModelName,
         generator: 'SDOptimizer',
+        optimizationNumber: runNumber,
       },
       performanceSummary: {
         improvementPercentage: Number(result.improvement_percentage.toFixed(4)),
         baselineScore: Number(result.initial_score.toFixed(6)),
         bestScore: Number(result.best_score.toFixed(6)),
         totalIterations: result.history.rewards.length,
+        executionTimeMs: result.execution_time_ms ?? 0,
       },
       configuration: {
         targetVariable: result.config_summary.target_variable,
@@ -65,7 +112,7 @@ export const OptimizationExport = ({ result, modelName }: OptimizationExportProp
     const url = URL.createObjectURL(blob)
     const link = document.createElement('a')
     link.href = url
-    link.download = `optimization-${cleanModelName.replace(/\s+/g, '-')}-${Date.now()}.json`
+    link.download = `${fileBase}-${Date.now()}.json`
     document.body.appendChild(link)
     link.click()
     document.body.removeChild(link)
@@ -82,7 +129,7 @@ export const OptimizationExport = ({ result, modelName }: OptimizationExportProp
     doc.setFontSize(24)
     doc.setTextColor(17, 24, 39)
     doc.setFont('helvetica', 'bold')
-    doc.text('Optimization Report', 14, 22)
+    doc.text(runNumber ? `Optimization Report #${runNumber}` : 'Optimization Report', 14, 22)
 
     // App Name (Right)
     doc.setFontSize(14)
@@ -134,6 +181,7 @@ export const OptimizationExport = ({ result, modelName }: OptimizationExportProp
         ['Baseline Score', result.initial_score.toFixed(4)],
         ['Best Score', result.best_score.toFixed(4)],
         ['Iterations', result.history.rewards.length.toString()],
+        ['Execution Time', `${((result.execution_time_ms ?? 0) / 1000).toFixed(2)} s`],
       ],
       theme: 'grid',
       headStyles: { fillColor: [31, 41, 55] },
@@ -200,47 +248,125 @@ export const OptimizationExport = ({ result, modelName }: OptimizationExportProp
       },
     })
 
-    const chartNodes = [
-      { id: 'reward-history-chart', title: 'Reward History' },
-      { id: 'parameter-evolution-chart', title: 'Parameter Evolution' },
-    ]
-
-    for (const { id, title } of chartNodes) {
-      const node = document.getElementById(id)
-      if (node) {
-        try {
-          const canvas = await html2canvas(node, {
-            scale: 2,
-            backgroundColor: '#ffffff',
-          })
-          const imgData = canvas.toDataURL('image/png')
-          const imgProps = doc.getImageProperties(imgData)
-
-          const margin = 14
-          const pdfWidth =
-            doc.internal.pageSize.getHeight() > doc.internal.pageSize.getWidth()
-              ? doc.internal.pageSize.getWidth() - margin * 2
-              : doc.internal.pageSize.getWidth() - margin * 2
-
-          const pdfHeight = (imgProps.height * pdfWidth) / imgProps.width
-          let currentY = (doc as AutoTableDoc).lastAutoTable.finalY + 15
-
-          if (currentY + pdfHeight + 10 > doc.internal.pageSize.getHeight()) {
-            doc.addPage()
-            currentY = 20
-          }
-
-          doc.setFontSize(14)
-          doc.setTextColor(31, 41, 55)
-          doc.setFont('helvetica', 'bold')
-          doc.text(title, margin, currentY)
-
-          doc.addImage(imgData, 'PNG', margin, currentY + 5, pdfWidth, pdfHeight)
-          ;(doc as AutoTableDoc).lastAutoTable.finalY = currentY + 5 + pdfHeight
-        } catch (err) {
-          console.error(`Failed to capture chart ${id}`, err)
-        }
+    const drawPdfLineChart = (title: string, series: PdfLineSeries[], xLabel: string) => {
+      if (series.length === 0 || series.every((item) => item.values.length === 0)) {
+        return
       }
+
+      const margin = 14
+      const chartWidth = pageWidth - margin * 2
+      const chartHeight = 78
+      const chartPadding = { top: 12, right: 10, bottom: 16, left: 22 }
+      const legendLineHeight = 8
+      const legendColumns = Math.min(series.length, 2)
+      const legendRows = Math.max(1, Math.ceil(series.length / Math.max(legendColumns, 1)))
+      const reservedHeight = chartHeight + 22 + legendRows * legendLineHeight
+      let currentY = (doc as AutoTableDoc).lastAutoTable.finalY + 16
+
+      if (currentY + reservedHeight > pageHeight - 8) {
+        doc.addPage()
+        currentY = 20
+      }
+
+      doc.setFontSize(14)
+      doc.setTextColor(31, 41, 55)
+      doc.setFont('helvetica', 'bold')
+      doc.text(title, margin, currentY)
+
+      const x = margin
+      const y = currentY + 8
+      const plotX = x + chartPadding.left
+      const plotY = y + chartPadding.top
+      const plotWidth = chartWidth - chartPadding.left - chartPadding.right
+      const plotHeight = chartHeight - chartPadding.top - chartPadding.bottom
+      const values = series.flatMap((item) => item.values)
+      const bounds = getFiniteBounds(values)
+      const maxIndex = Math.max(...series.map((item) => item.values.length - 1), 1)
+      const mapX = (index: number) => plotX + (index / maxIndex) * plotWidth
+      const mapY = (value: number) =>
+        plotY + plotHeight - ((value - bounds.min) / (bounds.max - bounds.min)) * plotHeight
+
+      doc.setDrawColor(229, 231, 235)
+      doc.setFillColor(249, 250, 251)
+      doc.roundedRect(x, y, chartWidth, chartHeight, 2, 2, 'FD')
+
+      doc.setDrawColor(209, 213, 219)
+      doc.setLineWidth(0.3)
+      for (let tick = 0; tick <= 4; tick += 1) {
+        const gridY = plotY + (plotHeight / 4) * tick
+        doc.line(plotX, gridY, plotX + plotWidth, gridY)
+      }
+
+      doc.setDrawColor(107, 114, 128)
+      doc.line(plotX, plotY + plotHeight, plotX + plotWidth, plotY + plotHeight)
+      doc.line(plotX, plotY, plotX, plotY + plotHeight)
+
+      series.forEach((item) => {
+        doc.setDrawColor(...item.color)
+        doc.setLineWidth(0.9)
+        for (let index = 1; index < item.values.length; index += 1) {
+          const previous = item.values[index - 1]
+          const current = item.values[index]
+          if (!Number.isFinite(previous) || !Number.isFinite(current)) {
+            continue
+          }
+          doc.line(mapX(index - 1), mapY(previous), mapX(index), mapY(current))
+        }
+      })
+
+      doc.setFontSize(8)
+      doc.setFont('helvetica', 'normal')
+      doc.setTextColor(107, 114, 128)
+      doc.text(bounds.max.toFixed(2), x + 3, plotY + 2)
+      doc.text(bounds.min.toFixed(2), x + 3, plotY + plotHeight)
+      doc.text(xLabel, plotX + plotWidth / 2, y + chartHeight - 4, { align: 'center' })
+
+      doc.setFontSize(9)
+      doc.setFont('helvetica', 'normal')
+      const legendStartY = y + chartHeight + 9
+      const legendColumnWidth = plotWidth / Math.max(legendColumns, 1)
+      series.forEach((item, index) => {
+        const column = legendColumns === 1 ? 0 : index % legendColumns
+        const row = legendColumns === 1 ? index : Math.floor(index / legendColumns)
+        const legendX = plotX + column * legendColumnWidth
+        const legendY = legendStartY + row * legendLineHeight
+        const label = item.label.length > 22 ? `${item.label.slice(0, 19)}...` : item.label
+
+        doc.setDrawColor(...item.color)
+        doc.setLineWidth(0.8)
+        doc.line(legendX, legendY - 1.5, legendX + 7, legendY - 1.5)
+        doc.setTextColor(...item.color)
+        doc.text(label, legendX + 10, legendY)
+      })
+      ;(doc as AutoTableDoc).lastAutoTable.finalY = legendStartY + legendRows * legendLineHeight + 2
+    }
+
+    drawPdfLineChart(
+      'Reward History',
+      [
+        {
+          label: 'Reward',
+          values: result.history.rewards,
+          color: [14, 165, 233],
+        },
+        {
+          label: 'Best Reward',
+          values: result.history.best_rewards,
+          color: [5, 150, 105],
+        },
+      ],
+      'Iteration'
+    )
+
+    const parameterNames = Object.keys(result.best_parameters)
+    const parameterSeries = parameterNames.map((name, index) => ({
+      label: name,
+      values: result.history.parameters.map((params) => params[index] ?? 0),
+      color: PARAMETER_COLORS[index % PARAMETER_COLORS.length],
+    }))
+
+    if (parameterSeries.length > 0) {
+      drawPdfLineChart('Parameter Evolution', parameterSeries, 'Iteration')
     }
 
     // Footer
@@ -253,18 +379,23 @@ export const OptimizationExport = ({ result, modelName }: OptimizationExportProp
       doc.text(`Generated by SDOptimizer - Page ${i} of ${pageCount}`, 14, pageHeight - 10)
     }
 
-    doc.save(`optimization-${cleanModelName.replace(/\s+/g, '-')}-${Date.now()}.pdf`)
+    doc.save(`${fileBase}-${Date.now()}.pdf`)
   }
 
   return (
     <div className="flex items-center gap-2">
-      <Button variant="outline" size="sm" onClick={exportToJson} className="gap-2">
+      <Button
+        variant="outline"
+        size="sm"
+        onClick={exportToJson}
+        className={compact ? 'bg-primary-50 gap-2' : 'gap-2'}
+      >
         <IconFileText size={16} />
-        Export JSON
+        {compact ? 'JSON' : 'Export JSON'}
       </Button>
       <Button variant="primary" size="sm" onClick={exportToPdf} className="gap-2">
         <IconFileTypePdf size={16} />
-        Export PDF
+        {compact ? 'PDF' : 'Export PDF'}
       </Button>
     </div>
   )

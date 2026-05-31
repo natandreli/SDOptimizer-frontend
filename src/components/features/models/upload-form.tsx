@@ -174,7 +174,7 @@ export const UploadForm = ({ onSuccess }: UploadFormProps) => {
             dragActive
               ? 'border-emerald-400 bg-emerald-50 shadow-md shadow-emerald-500/10'
               : file
-                ? 'border-emerald-400 bg-emerald-50/60 border-solid'
+                ? 'border-solid border-emerald-400 bg-emerald-50/60'
                 : 'border-emerald-300 bg-emerald-50/40 hover:border-emerald-400 hover:bg-emerald-50/70'
           }`}
         >
@@ -201,11 +201,11 @@ export const UploadForm = ({ onSuccess }: UploadFormProps) => {
               <IconX className="h-4 w-4" />
             </button>
           )}
-          <div className="flex flex-col items-center justify-center space-y-2 pointer-events-none">
+          <div className="pointer-events-none flex flex-col items-center justify-center space-y-2">
             {file ? (
               <IconFileText className="h-9 w-9 text-emerald-500" />
             ) : (
-              <div className="flex h-14 w-14 items-center justify-center rounded-full bg-white shadow-sm border border-emerald-100/80 transition-all duration-300 group-hover:scale-110 group-hover:shadow-md group-hover:border-emerald-200 group-hover:-translate-y-1">
+              <div className="flex h-14 w-14 items-center justify-center rounded-full border border-emerald-100/80 bg-white shadow-sm transition-all duration-300 group-hover:-translate-y-1 group-hover:scale-110 group-hover:border-emerald-200 group-hover:shadow-md">
                 <IconCloudUpload className="h-7 w-7 text-emerald-500 transition-transform duration-300 group-hover:scale-105" />
               </div>
             )}

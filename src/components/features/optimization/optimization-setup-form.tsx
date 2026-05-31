@@ -40,6 +40,8 @@ interface OptimizationSetupFormProps {
   onEpsilonChange: (value: string) => void
   effectiveMaxRuns: string
   onMaxRunsChange: (value: string) => void
+  effectiveOptimizationCount: string
+  onOptimizationCountChange: (value: string) => void
   effectiveGlobalRho: string
   onGlobalRhoChange: (value: string) => void
 
@@ -88,6 +90,8 @@ export const OptimizationSetupForm = ({
   onEpsilonChange,
   effectiveMaxRuns,
   onMaxRunsChange,
+  effectiveOptimizationCount,
+  onOptimizationCountChange,
   effectiveGlobalRho,
   onGlobalRhoChange,
 
@@ -108,9 +112,10 @@ export const OptimizationSetupForm = ({
   const parsedTotalTime = Number(effectiveTotalTime) || 0
   const parsedDt = Number(effectiveDt) || 0
   const parsedMaxRuns = Number(effectiveMaxRuns) || 0
+  const parsedOptimizationCount = Number(effectiveOptimizationCount) || 0
 
   const stepsPerSim = parsedDt > 0 ? Math.floor(parsedTotalTime / parsedDt) : 0
-  const totalMathSteps = stepsPerSim * parsedMaxRuns
+  const totalMathSteps = stepsPerSim * parsedMaxRuns * parsedOptimizationCount
 
   const modelPlaceholder = isModelsLoading
     ? 'Loading models...'
@@ -199,7 +204,7 @@ export const OptimizationSetupForm = ({
                   <div className="space-y-1">
                     <span className="text-primary-700 mb-1 flex items-center gap-1 text-[10px] font-semibold tracking-widest uppercase">
                       Max Runs
-                      <InfoTooltip content="Maximum number of simulation iterations allowed for the optimization algorithm." />
+                      <InfoTooltip content="Internal iterations performed by each optimization execution." />
                     </span>
                     <Input
                       type="number"
@@ -210,6 +215,27 @@ export const OptimizationSetupForm = ({
                       placeholder={
                         optimizationOptions ? String(optimizationOptions.defaults.max_runs) : ''
                       }
+                      required
+                      disabled={isSubmitting}
+                      className="font-mono text-sm"
+                    />
+                  </div>
+                </div>
+
+                <div className="grid grid-cols-2 gap-3">
+                  <div className="space-y-1">
+                    <span className="text-primary-700 mb-1 flex items-center gap-1 text-[10px] font-semibold tracking-widest uppercase">
+                      Optimizations
+                      <InfoTooltip content="Number of complete optimization executions to run in this batch." />
+                    </span>
+                    <Input
+                      type="number"
+                      min={1}
+                      max={100}
+                      step={1}
+                      value={effectiveOptimizationCount}
+                      setValue={onOptimizationCountChange}
+                      placeholder="1"
                       required
                       disabled={isSubmitting}
                       className="font-mono text-sm"
@@ -304,7 +330,7 @@ export const OptimizationSetupForm = ({
                 </div>
 
                 {/* Optimization Load Preview Card */}
-                {stepsPerSim > 0 && parsedMaxRuns > 0 && (
+                {stepsPerSim > 0 && parsedMaxRuns > 0 && parsedOptimizationCount > 0 && (
                   <motion.div
                     initial={{ opacity: 0, y: 10 }}
                     animate={{ opacity: 1, y: 0 }}
@@ -317,12 +343,18 @@ export const OptimizationSetupForm = ({
                     </div>
                     <div className="text-primary-950 space-y-1 text-[11px] font-medium">
                       <div className="flex justify-between">
-                        <span className="text-primary-800/80">Steps per Run:</span>
+                        <span className="text-primary-800/80">Steps per Simulation:</span>
                         <span className="font-mono">{stepsPerSim.toLocaleString()}</span>
                       </div>
                       <div className="flex justify-between">
-                        <span className="text-primary-800/80">Total Runs:</span>
+                        <span className="text-primary-800/80">Max Runs / Optimization:</span>
                         <span className="font-mono">{parsedMaxRuns.toLocaleString()}</span>
+                      </div>
+                      <div className="flex justify-between">
+                        <span className="text-primary-800/80">Optimizations:</span>
+                        <span className="font-mono">
+                          {parsedOptimizationCount.toLocaleString()}
+                        </span>
                       </div>
                       <div className="my-1 border-t border-sky-200/50" />
                       <div className="flex justify-between font-bold">

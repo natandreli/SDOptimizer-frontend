@@ -81,6 +81,7 @@ export interface OptimizationConfig {
   rho_factors: number[]
   epsilon: number
   max_runs: number
+  optimization_count?: number
   target_variable: string
   statistic: 'final' | 'mean' | 'max' | 'min'
   direction: 'maximize' | 'minimize'
@@ -136,6 +137,8 @@ export interface OptimizationConfigSummary {
 }
 
 export interface OptimizationResult {
+  optimization_number: number
+  execution_time_ms?: number
   best_parameters: Record<string, number>
   best_score: number
   history: OptimizationHistory
@@ -150,6 +153,9 @@ export interface OptimizationResult {
 
 export interface OptimizationResponse {
   result: OptimizationResult | null
+  results: OptimizationResult[]
+  best_optimization_number: number | null
+  total_execution_time_ms: number
 }
 
 export interface OptimizationOptionsResponse {

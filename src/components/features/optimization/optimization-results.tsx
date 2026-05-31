@@ -20,11 +20,13 @@ import {
 } from 'recharts'
 import type { OptimizationResult } from '@/services/api/models/types'
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card'
-import { OptimizationExport } from './optimization-export'
+import { cn } from '@/utils/cn'
+import { OptimizationExport } from '@/components/features/optimization/optimization-export'
 
 type OptimizationResultsProps = {
   result: OptimizationResult
   modelName: string
+  display?: 'page' | 'modal'
 }
 
 const formatNumber = (value: number, maxDecimals: number = 6) => {
@@ -36,6 +38,25 @@ const formatNumber = (value: number, maxDecimals: number = 6) => {
     minimumFractionDigits: 0,
     maximumFractionDigits: maxDecimals,
   })
+}
+
+const formatDuration = (milliseconds?: number) => {
+  if (!milliseconds || !Number.isFinite(milliseconds)) {
+    return '-'
+  }
+
+  if (milliseconds < 1000) {
+    return `${milliseconds.toFixed(0)} ms`
+  }
+
+  const seconds = milliseconds / 1000
+  if (seconds < 60) {
+    return `${seconds.toFixed(2)} s`
+  }
+
+  const minutes = Math.floor(seconds / 60)
+  const remainingSeconds = Math.round(seconds % 60)
+  return `${minutes}m ${remainingSeconds}s`
 }
 
 const PARAMETER_COLORS = [
@@ -51,9 +72,20 @@ const PARAMETER_COLORS = [
   '#84cc16',
 ]
 
-export const OptimizationResults = ({ result, modelName }: OptimizationResultsProps) => {
+export const OptimizationResults = ({
+  result,
+  modelName,
+  display = 'page',
+}: OptimizationResultsProps) => {
+  const isModal = display === 'modal'
   const improved = result.improvement_percentage > 0
   const unchanged = Math.abs(result.improvement_percentage) < 0.001
+  const modalSurfaceClass = isModal
+    ? 'border-primary-200/70 bg-primary-50/80 rounded-xl border p-5 shadow-sm'
+    : undefined
+  const configTileClass = isModal
+    ? 'rounded-lg bg-primary-100/40 px-3 py-2.5'
+    : 'border-primary-200 bg-primary-50/80 rounded-lg border px-3 py-2.5'
 
   const rewardHistoryData = useMemo(
     () =>
@@ -99,13 +131,16 @@ export const OptimizationResults = ({ result, modelName }: OptimizationResultsPr
       </div>
       <div className="grid grid-cols-1 gap-4 lg:grid-cols-3">
         <Card
-          className={`relative overflow-hidden lg:col-span-1 ${
-            unchanged
-              ? 'border-primary-300 bg-primary-50/90'
-              : improved
-                ? 'border-emerald-300 bg-emerald-50/90'
-                : 'border-red-300 bg-red-50/90'
-          }`}
+          className={cn(
+            `relative overflow-hidden lg:col-span-1 ${
+              unchanged
+                ? 'border-primary-300 bg-primary-50/90'
+                : improved
+                  ? 'border-emerald-300 bg-emerald-50/90'
+                  : 'border-red-300 bg-red-50/90'
+            }`,
+            modalSurfaceClass
+          )}
         >
           <CardContent>
             <div className="flex flex-col items-center justify-center py-4 text-center">
@@ -149,7 +184,7 @@ export const OptimizationResults = ({ result, modelName }: OptimizationResultsPr
           </CardContent>
         </Card>
 
-        <Card>
+        <Card className={modalSurfaceClass}>
           <CardContent>
             <div className="flex flex-col items-center justify-center py-4 text-center">
               <span className="text-primary-700/80 text-xs font-semibold tracking-widest uppercase">
@@ -163,7 +198,7 @@ export const OptimizationResults = ({ result, modelName }: OptimizationResultsPr
           </CardContent>
         </Card>
 
-        <Card className="border-emerald-200/60 bg-emerald-50/40">
+        <Card className={cn('border-emerald-200/60 bg-emerald-50/40', modalSurfaceClass)}>
           <CardContent>
             <div className="flex flex-col items-center justify-center py-4 text-center">
               <span className="text-xs font-semibold tracking-widest text-emerald-700/80 uppercase">
@@ -180,7 +215,7 @@ export const OptimizationResults = ({ result, modelName }: OptimizationResultsPr
         </Card>
       </div>
 
-      <Card>
+      <Card className={modalSurfaceClass}>
         <CardHeader>
           <CardTitle className="inline-flex items-center gap-2">
             <IconSettings className="h-4 w-4" />
@@ -190,7 +225,7 @@ export const OptimizationResults = ({ result, modelName }: OptimizationResultsPr
         </CardHeader>
         <CardContent>
           <div className="grid grid-cols-2 gap-3 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-7">
-            <div className="border-primary-200 bg-primary-50/80 rounded-lg border px-3 py-2.5">
+            <div className={configTileClass}>
               <p className="text-primary-600 text-[10px] font-semibold tracking-widest uppercase">
                 Target Variable
               </p>
@@ -198,7 +233,7 @@ export const OptimizationResults = ({ result, modelName }: OptimizationResultsPr
                 {result.config_summary.target_variable}
               </p>
             </div>
-            <div className="border-primary-200 bg-primary-50/80 rounded-lg border px-3 py-2.5">
+            <div className={configTileClass}>
               <p className="text-primary-600 text-[10px] font-semibold tracking-widest uppercase">
                 Statistic
               </p>
@@ -206,7 +241,7 @@ export const OptimizationResults = ({ result, modelName }: OptimizationResultsPr
                 {result.config_summary.statistic}
               </p>
             </div>
-            <div className="border-primary-200 bg-primary-50/80 rounded-lg border px-3 py-2.5">
+            <div className={configTileClass}>
               <p className="text-primary-600 text-[10px] font-semibold tracking-widest uppercase">
                 Direction
               </p>
@@ -214,7 +249,7 @@ export const OptimizationResults = ({ result, modelName }: OptimizationResultsPr
                 {result.config_summary.direction}
               </p>
             </div>
-            <div className="border-primary-200 bg-primary-50/80 rounded-lg border px-3 py-2.5">
+            <div className={configTileClass}>
               <p className="text-primary-600 text-[10px] font-semibold tracking-widest uppercase">
                 Max Runs
               </p>
@@ -222,7 +257,7 @@ export const OptimizationResults = ({ result, modelName }: OptimizationResultsPr
                 {result.config_summary.max_runs}
               </p>
             </div>
-            <div className="border-primary-200 bg-primary-50/80 rounded-lg border px-3 py-2.5">
+            <div className={configTileClass}>
               <p className="text-primary-600 text-[10px] font-semibold tracking-widest uppercase">
                 Epsilon
               </p>
@@ -231,7 +266,7 @@ export const OptimizationResults = ({ result, modelName }: OptimizationResultsPr
               </p>
             </div>
             {result.steps_per_simulation !== undefined && (
-              <div className="rounded-lg border border-sky-200 bg-sky-50/40 px-3 py-2.5">
+              <div className={cn(configTileClass, !isModal && 'border-sky-200 bg-sky-50/40')}>
                 <p className="text-[10px] font-semibold tracking-widest text-sky-700 uppercase">
                   Steps / Sim
                 </p>
@@ -241,7 +276,9 @@ export const OptimizationResults = ({ result, modelName }: OptimizationResultsPr
               </div>
             )}
             {result.total_mathematical_steps !== undefined && (
-              <div className="rounded-lg border border-emerald-200 bg-emerald-50/40 px-3 py-2.5">
+              <div
+                className={cn(configTileClass, !isModal && 'border-emerald-200 bg-emerald-50/40')}
+              >
                 <p className="text-[10px] font-semibold tracking-widest text-emerald-700 uppercase">
                   Total Steps
                 </p>
@@ -250,11 +287,21 @@ export const OptimizationResults = ({ result, modelName }: OptimizationResultsPr
                 </p>
               </div>
             )}
+            {result.execution_time_ms !== undefined && (
+              <div className={cn(configTileClass, !isModal && 'border-violet-200 bg-violet-50/40')}>
+                <p className="text-[10px] font-semibold tracking-widest text-violet-700 uppercase">
+                  Execution Time
+                </p>
+                <p className="mt-1 font-mono text-sm font-semibold text-violet-950">
+                  {formatDuration(result.execution_time_ms)}
+                </p>
+              </div>
+            )}
           </div>
         </CardContent>
       </Card>
 
-      <Card>
+      <Card className={modalSurfaceClass}>
         <CardHeader>
           <CardTitle className="inline-flex items-center gap-2">
             <IconTable className="h-4 w-4" />
@@ -288,7 +335,7 @@ export const OptimizationResults = ({ result, modelName }: OptimizationResultsPr
                   const isNeutral = !isPositive && !isNegative
 
                   return (
-                    <tr key={name} className="hover:bg-primary-50/40 transition-colors">
+                    <tr key={name}>
                       <td className="text-primary-900 px-4 py-3 font-mono text-sm font-medium tracking-wide">
                         {name}
                       </td>
@@ -323,7 +370,7 @@ export const OptimizationResults = ({ result, modelName }: OptimizationResultsPr
         </CardContent>
       </Card>
 
-      <Card>
+      <Card className={modalSurfaceClass}>
         <CardHeader>
           <CardTitle className="inline-flex items-center gap-2">
             <IconChartLine className="h-4 w-4" />
@@ -396,7 +443,7 @@ export const OptimizationResults = ({ result, modelName }: OptimizationResultsPr
       </Card>
 
       {parameterEvolutionData.length > 0 && (
-        <Card>
+        <Card className={modalSurfaceClass}>
           <CardHeader>
             <CardTitle className="inline-flex items-center gap-2">
               <IconTrendingUp className="h-4 w-4" />

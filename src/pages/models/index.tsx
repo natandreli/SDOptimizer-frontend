@@ -30,9 +30,9 @@ export const ModelsPage = () => {
           </div>
         </div>
 
-        <div className="hidden lg:order-2 lg:block w-[3px] self-stretch bg-gradient-to-b from-primary-100 via-primary-200/80 to-primary-100 rounded-full" />
+        <div className="from-primary-100 via-primary-200/80 to-primary-100 hidden w-[3px] self-stretch rounded-full bg-gradient-to-b lg:order-2 lg:block" />
 
-        <aside className="order-1 space-y-6 lg:order-3 lg:sticky lg:top-4 self-start">
+        <aside className="order-1 space-y-6 self-start lg:sticky lg:top-4 lg:order-3">
           <div className="border-primary-100 rounded-xl border bg-white/30 p-5 text-sm">
             <h4 className="text-primary-900 mb-2 font-semibold">Workspace Info</h4>
             <div className="space-y-3">

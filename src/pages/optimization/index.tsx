@@ -1,11 +1,12 @@
 import { IconChartLine } from '@tabler/icons-react'
 import type { FormEvent } from 'react'
-import { useEffect, useMemo, useState } from 'react'
+import { useCallback, useEffect, useMemo, useState } from 'react'
 import { useMutation, useQuery } from '@tanstack/react-query'
 import type { AxiosError } from 'axios'
 import { OptimizationSetupForm } from '@/components/features/optimization/optimization-setup-form'
 import { OptimizationEmptyState } from '@/components/features/optimization/optimization-empty-state'
 import { OptimizationResults } from '@/components/features/optimization/optimization-results'
+import { OptimizationBatchResultsTable } from '@/components/features/optimization/optimization-batch-results-table'
 import { getAllModels, getOptimizationOptions, optimizeModel } from '@/services/api/models'
 import type {
   OptimizationConfig,
@@ -14,6 +15,7 @@ import type {
   OptimizationResult,
 } from '@/services/api/models/types'
 import { useToast } from '@/hooks/use-toast'
+import { useModal } from '@/hooks/use-modal'
 
 type NumericFieldState = Record<string, string>
 type OptimizationTargetDirection = OptimizationOptions['directions'][number]
@@ -25,12 +27,14 @@ const DIRECTION_OPTIONS: Array<{ label: string; value: OptimizationTargetDirecti
 
 export const OptimizationPage = () => {
   const toast = useToast()
+  const modal = useModal()
   const [selectedModelId, setSelectedModelId] = useState('')
   const [selectedStatistic, setSelectedStatistic] = useState('')
   const [selectedTargetVariable, setSelectedTargetVariable] = useState('')
   const [selectedDirection, setSelectedDirection] = useState<OptimizationTargetDirection | ''>('')
   const [epsilon, setEpsilon] = useState('')
   const [maxRuns, setMaxRuns] = useState('')
+  const [optimizationCount, setOptimizationCount] = useState('1')
   const [initialValues, setInitialValues] = useState<NumericFieldState>({})
   const [boundMins, setBoundMins] = useState<NumericFieldState>({})
   const [boundMaxs, setBoundMaxs] = useState<NumericFieldState>({})
@@ -38,6 +42,9 @@ export const OptimizationPage = () => {
   const [dt, setDt] = useState('')
   const [totalTime, setTotalTime] = useState('')
   const [result, setResult] = useState<OptimizationResult | null>(null)
+  const [batchResults, setBatchResults] = useState<OptimizationResult[]>([])
+  const [bestOptimizationNumber, setBestOptimizationNumber] = useState<number | null>(null)
+  const [totalExecutionTimeMs, setTotalExecutionTimeMs] = useState(0)
   const [progress, setProgress] = useState(0)
 
   const { data: models, isLoading: isLoadingModels } = useQuery({
@@ -62,6 +69,7 @@ export const OptimizationPage = () => {
     epsilon || (optimizationOptions ? String(optimizationOptions.defaults.epsilon) : '')
   const effectiveMaxRuns =
     maxRuns || (optimizationOptions ? String(optimizationOptions.defaults.max_runs) : '')
+  const effectiveOptimizationCount = optimizationCount || '1'
   const effectiveDt =
     dt || (optimizationOptions?.defaults?.dt ? String(optimizationOptions.defaults.dt) : '')
   const effectiveTotalTime =
@@ -79,8 +87,16 @@ export const OptimizationPage = () => {
     mutationFn: ({ modelId, config }: { modelId: string; config: OptimizationConfig }) =>
       optimizeModel(modelId, config),
     onSuccess: (data) => {
+      const nextResults = data.results?.length ? data.results : data.result ? [data.result] : []
+      const nextBestResult = data.result ?? nextResults[0] ?? null
+
       setProgress(100)
-      setResult(data.result)
+      setResult(nextBestResult)
+      setBatchResults(nextResults)
+      setBestOptimizationNumber(
+        data.best_optimization_number ?? nextBestResult?.optimization_number ?? null
+      )
+      setTotalExecutionTimeMs(data.total_execution_time_ms ?? 0)
       toast.success('Optimization completed successfully')
     },
     onError: (error: AxiosError<{ detail?: string }>) => {
@@ -117,23 +133,21 @@ export const OptimizationPage = () => {
     return () => clearTimeout(resetTimer)
   }, [optimizeMutation.isPending, progress])
 
-  useEffect(() => {
-    if (!optimizationOptions) {
-      return
-    }
+  const applyOptimizationDefaults = useCallback((options: OptimizationOptions) => {
     setMaxRuns('100')
+    setOptimizationCount('1')
     setEpsilon('0.7')
     setGlobalRho('0.1')
-    setDt(optimizationOptions.defaults.dt ? String(optimizationOptions.defaults.dt) : '')
-    setTotalTime(optimizationOptions.defaults.total_time ? String(optimizationOptions.defaults.total_time) : '')
-    setSelectedStatistic(optimizationOptions.defaults.statistic || '')
-    setSelectedTargetVariable(optimizationOptions.target_variables[0] || '')
-    setSelectedDirection(optimizationOptions.defaults.direction || '')
+    setDt(options.defaults.dt ? String(options.defaults.dt) : '')
+    setTotalTime(options.defaults.total_time ? String(options.defaults.total_time) : '')
+    setSelectedStatistic(options.defaults.statistic || '')
+    setSelectedTargetVariable(options.target_variables[0] || '')
+    setSelectedDirection(options.defaults.direction || '')
 
     const newInitials: NumericFieldState = {}
     const newMins: NumericFieldState = {}
     const newMaxs: NumericFieldState = {}
-    optimizationOptions.parameters.forEach((param) => {
+    options.parameters.forEach((param) => {
       newInitials[param.name] = String(param.initial_value)
       newMins[param.name] = String(param.suggested_bounds[0])
       newMaxs[param.name] = String(param.suggested_bounds[1])
@@ -141,7 +155,20 @@ export const OptimizationPage = () => {
     setInitialValues(newInitials)
     setBoundMins(newMins)
     setBoundMaxs(newMaxs)
-  }, [optimizationOptions])
+  }, [])
+
+  useEffect(() => {
+    if (!optimizationOptions) {
+      return
+    }
+    const defaultsTimer = window.setTimeout(() => {
+      applyOptimizationDefaults(optimizationOptions)
+    }, 0)
+
+    return () => {
+      window.clearTimeout(defaultsTimer)
+    }
+  }, [applyOptimizationDefaults, optimizationOptions])
 
   const modelOptions = useMemo(
     () =>
@@ -196,6 +223,7 @@ export const OptimizationPage = () => {
 
     const epsilonValue = Number(effectiveEpsilon)
     const maxRunsValue = Number(effectiveMaxRuns)
+    const optimizationCountValue = Number(effectiveOptimizationCount)
     const globalRhoValue = Number(effectiveGlobalRho)
     const dtValue = effectiveDt ? Number(effectiveDt) : undefined
     const totalTimeValue = effectiveTotalTime ? Number(effectiveTotalTime) : undefined
@@ -207,6 +235,15 @@ export const OptimizationPage = () => {
 
     if (!Number.isInteger(maxRunsValue) || maxRunsValue <= 0) {
       toast.error('Max runs must be a positive integer')
+      return
+    }
+
+    if (
+      !Number.isInteger(optimizationCountValue) ||
+      optimizationCountValue < 1 ||
+      optimizationCountValue > 100
+    ) {
+      toast.error('Optimizations must be an integer between 1 and 100')
       return
     }
 
@@ -274,6 +311,9 @@ export const OptimizationPage = () => {
     }
 
     setResult(null)
+    setBatchResults([])
+    setBestOptimizationNumber(null)
+    setTotalExecutionTimeMs(0)
     setProgress(8)
 
     optimizeMutation.mutate({
@@ -285,6 +325,7 @@ export const OptimizationPage = () => {
         rho_factors: rhoFactorArray,
         epsilon: epsilonValue,
         max_runs: maxRunsValue,
+        optimization_count: optimizationCountValue,
         statistic: effectiveStatistic as OptimizationOptions['statistics'][number],
         target_variable: effectiveTargetVariable,
         direction: effectiveDirection as OptimizationTargetDirection,
@@ -301,8 +342,32 @@ export const OptimizationPage = () => {
     Boolean(effectiveTargetVariable) &&
     Boolean(effectiveEpsilon) &&
     Boolean(effectiveMaxRuns) &&
+    Boolean(effectiveOptimizationCount) &&
     Boolean(effectiveDt) &&
     Boolean(effectiveTotalTime)
+
+  const selectedModelName =
+    models?.find((m) => m.model_id === selectedModelId)?.model?.file_name || selectedModelId
+
+  const handleViewOptimizationResult = (optimizationResult: OptimizationResult, rank: number) => {
+    modal.open(
+      <div className="w-[min(1120px,calc(100vw-5rem))] max-w-full">
+        <div className="mb-5 pr-8">
+          <p className="text-primary-950 text-xl font-semibold">
+            Optimization #{optimizationResult.optimization_number}
+          </p>
+          <p className="text-primary-700 mt-1 text-sm">
+            Rank #{rank} in the current optimization batch.
+          </p>
+        </div>
+        <OptimizationResults
+          result={optimizationResult}
+          modelName={selectedModelName}
+          display="modal"
+        />
+      </div>
+    )
+  }
 
   return (
     <div className="flex min-h-0 flex-1 flex-col gap-4">
@@ -322,11 +387,15 @@ export const OptimizationPage = () => {
             onSelectedModelIdChange={(value) => {
               setSelectedModelId(value)
               setResult(null)
+              setBatchResults([])
+              setBestOptimizationNumber(null)
+              setTotalExecutionTimeMs(0)
               setSelectedStatistic('')
               setSelectedTargetVariable('')
               setSelectedDirection('')
               setEpsilon('')
               setMaxRuns('')
+              setOptimizationCount('1')
               setInitialValues({})
               setBoundMins({})
               setBoundMaxs({})
@@ -351,6 +420,8 @@ export const OptimizationPage = () => {
             onEpsilonChange={setEpsilon}
             effectiveMaxRuns={maxRuns}
             onMaxRunsChange={setMaxRuns}
+            effectiveOptimizationCount={effectiveOptimizationCount}
+            onOptimizationCountChange={setOptimizationCount}
             effectiveGlobalRho={globalRho}
             onGlobalRhoChange={setGlobalRho}
             effectiveDt={dt}
@@ -408,13 +479,17 @@ export const OptimizationPage = () => {
               />
             )}
             {!optimizeMutation.isPending && result && (
-              <OptimizationResults
-                result={result}
-                modelName={
-                  models?.find((m) => m.model_id === selectedModelId)?.model?.file_name ||
-                  selectedModelId
-                }
-              />
+              <div className="space-y-5">
+                {batchResults.length > 0 && (
+                  <OptimizationBatchResultsTable
+                    results={batchResults}
+                    bestOptimizationNumber={bestOptimizationNumber}
+                    totalExecutionTimeMs={totalExecutionTimeMs}
+                    modelName={selectedModelName}
+                    onViewResult={handleViewOptimizationResult}
+                  />
+                )}
+              </div>
             )}
           </div>
         </section>
